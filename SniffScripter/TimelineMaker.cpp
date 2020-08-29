@@ -847,8 +847,8 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
 
     ASSERT(!questsToCheck.empty());
 
-    std::set<uint32> questAcceptEvents;
-    std::set<uint32> questCompleteEvents;
+    std::map<uint32, std::string> questAcceptEvents;
+    std::map<uint32, std::string> questCompleteEvents;
 
     for (const auto& itr : questsToCheck)
     {
@@ -919,10 +919,38 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
 
         if (!m_eventsMap.empty())
         {
+            std::set<std::string> eventTypes;
+            for (const auto& sniffedEvent : m_eventsMap)
+            {
+                if (sniffedEvent.second->GetType() == SE_CREATURE_CREATE2)
+                    eventTypes.insert(std::string("Creature Spawn"));
+                else if (sniffedEvent.second->GetType() == SE_GAMEOBJECT_CREATE2)
+                    eventTypes.insert(std::string("GameObject Spawn"));
+                else if (sniffedEvent.second->GetType() == SE_CREATURE_EMOTE)
+                    eventTypes.insert(std::string("Emote"));
+                else if (sniffedEvent.second->GetType() == SE_CREATURE_TEXT)
+                    eventTypes.insert(std::string("Text"));
+                else if (sniffedEvent.second->GetType() == SE_CREATURE_MOVEMENT)
+                    eventTypes.insert(std::string("Movement"));
+                else if (sniffedEvent.second->GetType() == SE_SPELL_CAST_START ||
+                         sniffedEvent.second->GetType() == SE_SPELL_CAST_GO)
+                    eventTypes.insert(std::string("Spell Cast"));
+                else if (sniffedEvent.second->GetType() == SE_CREATURE_UPDATE_NPC_FLAGS || 
+                         sniffedEvent.second->GetType() == SE_GAMEOBJECT_UPDATE_FLAGS || 
+                         sniffedEvent.second->GetType() == SE_GAMEOBJECT_UPDATE_STATE)
+                    eventTypes.insert(std::string("Values Update"));
+            }
+            std::string eventTypesList;
+            for (const auto& eventType : eventTypes)
+            {
+                if (!eventTypesList.empty())
+                    eventTypesList += ", ";
+                eventTypesList += eventType;
+            }
             if (itr.type == QUEST_ACCEPT)
-                questAcceptEvents.insert(itr.questId);
+                questAcceptEvents.insert(std::make_pair(itr.questId, eventTypesList));
             else if (itr.type == QUEST_COMPLETE)
-                questCompleteEvents.insert(itr.questId);
+                questCompleteEvents.insert(std::make_pair(itr.questId, eventTypesList));
         }
     }
 
@@ -931,7 +959,7 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
         printf("Quests with an event on accepting:\n");
         for (auto questId : questAcceptEvents)
         {
-            printf("%s (%u)\n", WorldDatabase::GetQuestName(questId).c_str(), questId);
+            printf("%s (%u) - Events: %s\n", WorldDatabase::GetQuestName(questId.first).c_str(), questId.first, questId.second.c_str());
         }
         printf("\n");
     }
@@ -940,7 +968,7 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
         printf("Quests with an event on completion:\n");
         for (auto questId : questCompleteEvents)
         {
-            printf("%s (%u)\n", WorldDatabase::GetQuestName(questId).c_str(), questId);
+            printf("%s (%u) - Events: %s\n", WorldDatabase::GetQuestName(questId.first).c_str(), questId.first, questId.second.c_str());
         }
         printf("\n");
     }
