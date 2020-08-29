@@ -1,4 +1,5 @@
 #include <map>
+#include <set>
 #include <iostream>
 #include <fstream>
 #include "Defines\SniffedEvents.h"
@@ -13,7 +14,7 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
 {
     for (const auto& guid : vCreatureGuids)
     {
-        uint32 creatureId = SniffDatabase::GetCreatureEntryFromGuid(guid);
+        //uint32 creatureId = SniffDatabase::GetCreatureEntryFromGuid(guid);
 
         {
             char whereClause[128] = {};
@@ -53,7 +54,7 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CreatureID` = %u) && (`UnixTime` >= %u)", creatureId, uiStartTime);
+            sprintf(whereClause, "(`CreatureGuid` = %u) && (`UnixTime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadCreatureText(whereClause);
         }
 
@@ -107,32 +108,32 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterId` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", creatureId, uiStartTime);
+            sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterId` != %u) && (`TargetId` = %u) && (`TargetId` = 'Creature') && (`UnixTime` >= %u)", creatureId, creatureId, uiStartTime);
+            sprintf(whereClause, "(`CasterGuid` != %u) && (`TargetGuid` = %u) && (`TargetType` = 'Creature') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterId` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", creatureId, uiStartTime);
+            sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadSpellCastGo(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterId` != %u) && (`MainTargetId` = %u) && (`MainTargetType` = 'Creature') && (`UnixTime` >= %u)", creatureId, creatureId, uiStartTime);
+            sprintf(whereClause, "(`CasterGuid` != %u) && (`MainTargetGuid` = %u) && (`MainTargetType` = 'Creature') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
             SniffDatabase::LoadSpellCastGo(whereClause);
         }
     }
 
     for (const auto& guid : vGameObjectGuids)
     {
-        uint32 gameObjectId = SniffDatabase::GetGameObjectEntryFromGuid(guid);
+        //uint32 gameObjectId = SniffDatabase::GetGameObjectEntryFromGuid(guid);
 
         {
             char whereClause[128] = {};
@@ -144,12 +145,6 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
             char whereClause[128] = {};
             sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadGameObjectCreate2(whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadGameObjectDestroy(whereClause);
         }
 
         if (!showGoUse)
@@ -173,26 +168,32 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterId` = %u) && (`CasterType` = 'GameObject') && (`UnixTime` >= %u)", gameObjectId, uiStartTime);
+            sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'GameObject') && (`UnixTime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterId` != %u) && (`TargetId` = %u) && (`TargetId` = 'GameObject') && (`UnixTime` >= %u)", gameObjectId, gameObjectId, uiStartTime);
+            sprintf(whereClause, "(`CasterGuid` != %u) && (`TargetGuid` = %u) && (`TargetType` = 'GameObject') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterId` = %u) && (`CasterType` = 'GameObject') && (`UnixTime` >= %u)", gameObjectId, uiStartTime);
+            sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'GameObject') && (`UnixTime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadSpellCastGo(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterId` != %u) && (`MainTargetId` = %u) && (`MainTargetType` = 'GameObject') && (`UnixTime` >= %u)", gameObjectId, gameObjectId, uiStartTime);
+            sprintf(whereClause, "(`CasterGuid` != %u) && (`MainTargetGuid` = %u) && (`MainTargetType` = 'GameObject') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
             SniffDatabase::LoadSpellCastGo(whereClause);
+        }
+
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            SniffDatabase::LoadGameObjectDestroy(whereClause);
         }
     }
 
@@ -434,6 +435,14 @@ void TimelineMaker::PrintTimelineToScreen(time_t startTime)
     }
 }
 
+std::string GetTimeString(time_t eventTime)
+{
+    struct tm* ptime = gmtime(&eventTime);
+    char buff[10];
+    snprintf(buff, sizeof(buff), "%02d:%02d:%02d", ptime->tm_hour, ptime->tm_min, ptime->tm_sec);
+    return std::string(buff);
+}
+
 void TimelineMaker::PrintTimelineToFile(time_t startTime)
 {
     std::ofstream log("timeline.txt");
@@ -447,9 +456,9 @@ void TimelineMaker::PrintTimelineToFile(time_t startTime)
     for (const auto& itr : m_eventsMap)
     {
         time_t timeDiff = itr.first - lastEventTime;
-        log << "\n\n----------------------\n";
-        log << (uint32)timeDiff << " SECONDS LATER\n";
-        log << "----------------------\n\n";
+        log << "\n\n------------------------------\n";
+        log << (uint32)timeDiff << " SECONDS LATER (" + GetTimeString(itr.first) + ")\n";
+        log << "------------------------------\n\n";
         log << itr.second->ToString(false);
         lastEventTime = itr.first;
     }
@@ -665,7 +674,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
 
     {
         char whereClause[128] = {};
-        sprintf(whereClause, "(`CreatureID` = %u) && (`UnixTime` >= %u)", SniffDatabase::GetCreatureEntryFromGuid(guid), firstMoveTime);
+        sprintf(whereClause, "(`CreatureGuid` = %u) && (`UnixTime` >= %u)", guid, firstMoveTime);
         SniffDatabase::LoadCreatureText(whereClause);
     }
 
@@ -713,13 +722,13 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
 
     {
         char whereClause[128] = {};
-        sprintf(whereClause, "(`CasterId` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", SniffDatabase::GetCreatureEntryFromGuid(guid), firstMoveTime);
+        sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, firstMoveTime);
         SniffDatabase::LoadSpellCastStart(whereClause);
     }
 
     {
         char whereClause[128] = {};
-        sprintf(whereClause, "(`CasterId` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", SniffDatabase::GetCreatureEntryFromGuid(guid), firstMoveTime);
+        sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, firstMoveTime);
         SniffDatabase::LoadSpellCastGo(whereClause);
     }
 }
@@ -772,4 +781,169 @@ uint32 TimelineMaker::PrintWaypointsToFile()
 
     log.close();
     return totalWaypointRows;
+}
+
+enum QuestEventType
+{
+    QUEST_NONE,
+    QUEST_ACCEPT,
+    QUEST_COMPLETE
+};
+
+struct QuestEventData
+{
+    uint32 questId = 0;
+    QuestEventType type = QUEST_NONE;
+    time_t startTime = 0;
+    uint32 duration = 0;
+    uint32 objectGuid = 0;
+    std::string objectType;
+};
+
+#ifdef min
+#undef min
+#endif
+
+bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
+{
+    SniffDatabase::LoadQuestAcceptTimes("(`unixtime` != 0)");
+    SniffDatabase::LoadQuestCompleteTimes("(`unixtime` != 0)");
+
+    if (m_eventsMap.empty())
+        return false;
+
+    std::vector<QuestEventData> questsToCheck;
+
+    QuestEventData lastQuestEvent;
+    for (const auto& itr : m_eventsMap)
+    {
+        if (lastQuestEvent.type != QUEST_NONE)
+        {
+            lastQuestEvent.duration = itr.first - lastQuestEvent.startTime;
+            if (lastQuestEvent.duration = std::min(duration, lastQuestEvent.duration))
+                questsToCheck.push_back(lastQuestEvent);
+        }
+        if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_QuestAccept>(itr.second))
+        {
+            lastQuestEvent.questId = ptr->m_questId;
+            lastQuestEvent.startTime = itr.first;
+            lastQuestEvent.duration = duration;
+            lastQuestEvent.type = QUEST_ACCEPT;
+            lastQuestEvent.objectGuid = ptr->m_objectGuid;
+            lastQuestEvent.objectType = ptr->m_objectType;
+        }
+        else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_QuestComplete>(itr.second))
+        {
+            lastQuestEvent.questId = ptr->m_questId;
+            lastQuestEvent.startTime = itr.first;
+            lastQuestEvent.duration = duration;
+            lastQuestEvent.type = QUEST_COMPLETE;
+            lastQuestEvent.objectGuid = ptr->m_objectGuid;
+            lastQuestEvent.objectType = ptr->m_objectType;
+        }
+    }
+    if (lastQuestEvent.type != QUEST_NONE)
+        questsToCheck.push_back(lastQuestEvent);
+
+    ASSERT(!questsToCheck.empty());
+
+    std::set<uint32> questAcceptEvents;
+    std::set<uint32> questCompleteEvents;
+
+    for (const auto& itr : questsToCheck)
+    {
+        m_eventsMap.clear();
+        uint32 startTime = itr.startTime;
+        uint32 endTime = startTime + itr.duration;
+
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", startTime, endTime);
+            SniffDatabase::LoadCreatureCreate2(whereClause);
+        }
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", startTime, endTime);
+            SniffDatabase::LoadGameObjectCreate2(whereClause);
+        }
+
+        if (itr.objectType == "Creature")
+        {
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                SniffDatabase::LoadCreatureEmote(whereClause);
+            }
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CreatureGuid` = %u) && (`UnixTime` >= %u) && (`UnixTime` <= %u)", itr.objectGuid, startTime, endTime);
+                SniffDatabase::LoadCreatureText(whereClause);
+            }
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`id` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                SniffDatabase::LoadCreatureMovement(whereClause);
+            }
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
+            }
+        }
+        else if (itr.objectType == "GameObject")
+        {
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_flags>("flags", whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
+            }
+        }
+        
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`CasterGuid` = %u) && (`UnixTime` >= %u) && (`UnixTime`<= %u)", itr.objectGuid, startTime, endTime);
+            SniffDatabase::LoadSpellCastStart(whereClause);
+        }
+        
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`CasterGuid` = %u) && (`UnixTime` >= %u) && (`UnixTime`<= %u)", itr.objectGuid, startTime, endTime);
+            SniffDatabase::LoadSpellCastGo(whereClause);
+        }
+
+        if (!m_eventsMap.empty())
+        {
+            if (itr.type == QUEST_ACCEPT)
+                questAcceptEvents.insert(itr.questId);
+            else if (itr.type == QUEST_COMPLETE)
+                questCompleteEvents.insert(itr.questId);
+        }
+    }
+
+    if (!questAcceptEvents.empty())
+    {
+        printf("Quests with an event on accepting:\n");
+        for (auto questId : questAcceptEvents)
+        {
+            printf("%s (%u)\n", WorldDatabase::GetQuestName(questId).c_str(), questId);
+        }
+        printf("\n");
+    }
+    if (!questCompleteEvents.empty())
+    {
+        printf("Quests with an event on completion:\n");
+        for (auto questId : questCompleteEvents)
+        {
+            printf("%s (%u)\n", WorldDatabase::GetQuestName(questId).c_str(), questId);
+        }
+        printf("\n");
+    }
+
+    return !questCompleteEvents.empty() || !questAcceptEvents.empty();
 }

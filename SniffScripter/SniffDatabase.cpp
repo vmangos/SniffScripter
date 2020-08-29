@@ -134,7 +134,7 @@ void SniffDatabase::LoadSpellCastGo(char const* whereClause)
 
 void SniffDatabase::LoadPlaySound(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `sound`, `source_id`, `source_type` FROM `%s`.`play_sound` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `sound`, `source_guid`, `source_id`, `source_type` FROM `%s`.`play_sound` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -142,10 +142,11 @@ void SniffDatabase::LoadPlaySound(char const* whereClause)
 
             time_t unixtime = pFields[0].getUInt32();
             uint32 soundId = pFields[1].getUInt32();
-            uint32 sourceId = pFields[2].getUInt32();
-            std::string sourceType = pFields[3].getCppString();
+            uint32 sourceGuid = pFields[2].getUInt32();
+            uint32 sourceId = pFields[3].getUInt32();
+            std::string sourceType = pFields[4].getCppString();
 
-            std::shared_ptr<SniffedEvent_PlaySound> newEvent = std::make_shared<SniffedEvent_PlaySound>(soundId, sourceId, sourceType);
+            std::shared_ptr<SniffedEvent_PlaySound> newEvent = std::make_shared<SniffedEvent_PlaySound>(soundId, sourceGuid, sourceId, sourceType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
 
         } while (result->NextRow());
@@ -201,22 +202,23 @@ void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereC
 
 void SniffDatabase::LoadCreatureText(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `UnixTime`, `CreatureID`, `GroupID` FROM `%s`.`creature_text` WHERE %s ORDER BY `UnixTime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `UnixTime`, `CreatureGuid`, `CreatureID`, `GroupID` FROM `%s`.`creature_text` WHERE %s ORDER BY `UnixTime`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
             time_t unixtime = pFields[0].getUInt32();
-            uint32 creatureId = pFields[1].getUInt32();
-            uint32 groupId = pFields[2].getUInt32();
+            uint32 creatureGuid = pFields[1].getUInt32();
+            uint32 creatureId = pFields[2].getUInt32();
+            uint32 groupId = pFields[3].getUInt32();
 
             CreatureText const* textEntry = SniffDatabase::GetCreatureTextTemplate(creatureId, groupId);
             std::string text = textEntry ? textEntry->text : "<error>";
             uint32 chatType = textEntry ? textEntry->chatType : 0;
             std::string comment = textEntry ? textEntry->comment : "<error>";
 
-            std::shared_ptr<SniffedEvent_CreatureText> newEvent = std::make_shared<SniffedEvent_CreatureText>(creatureId, text, chatType, comment);
+            std::shared_ptr<SniffedEvent_CreatureText> newEvent = std::make_shared<SniffedEvent_CreatureText>(creatureGuid, creatureId, text, chatType, comment);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
 
         } while (result->NextRow());
@@ -472,18 +474,19 @@ void SniffDatabase::LoadGameObjectUpdate(char const* fieldName, char const* wher
 
 void SniffDatabase::LoadQuestAcceptTimes(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `object_id`, `object_type`, `quest_id` FROM `%s`.`quest_client_accept` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `object_guid`, `object_id`, `object_type`, `quest_id` FROM `%s`.`quest_client_accept` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
             time_t unixtime = pFields[0].getUInt32();
-            uint32 objectId = pFields[1].getUInt32();
-            std::string objectType = pFields[2].getCppString();
-            uint32 questId = pFields[3].getUInt32();
+            uint32 objectGuid = pFields[1].getUInt32();
+            uint32 objectId = pFields[2].getUInt32();
+            std::string objectType = pFields[3].getCppString();
+            uint32 questId = pFields[4].getUInt32();
 
-            std::shared_ptr<SniffedEvent_QuestAccept> newEvent = std::make_shared<SniffedEvent_QuestAccept>(questId, objectId, objectType);
+            std::shared_ptr<SniffedEvent_QuestAccept> newEvent = std::make_shared<SniffedEvent_QuestAccept>(questId, objectGuid, objectId, objectType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
 
         } while (result->NextRow());
@@ -492,18 +495,19 @@ void SniffDatabase::LoadQuestAcceptTimes(char const* whereClause)
 
 void SniffDatabase::LoadQuestCompleteTimes(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `object_id`, `object_type`, `quest_id` FROM `%s`.`quest_client_complete` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `object_guid`, `object_id`, `object_type`, `quest_id` FROM `%s`.`quest_client_complete` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
             time_t unixtime = pFields[0].getUInt32();
-            uint32 objectId = pFields[1].getUInt32();
-            std::string objectType = pFields[2].getCppString();
-            uint32 questId = pFields[3].getUInt32();
+            uint32 objectGuid = pFields[1].getUInt32();
+            uint32 objectId = pFields[2].getUInt32();
+            std::string objectType = pFields[3].getCppString();
+            uint32 questId = pFields[4].getUInt32();
 
-            std::shared_ptr<SniffedEvent_QuestComplete> newEvent = std::make_shared<SniffedEvent_QuestComplete>(questId, objectId, objectType);
+            std::shared_ptr<SniffedEvent_QuestComplete> newEvent = std::make_shared<SniffedEvent_QuestComplete>(questId, objectGuid, objectId, objectType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
 
         } while (result->NextRow());

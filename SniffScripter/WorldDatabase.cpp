@@ -68,6 +68,26 @@ void WorldDatabase::LoadItems()
     }
 }
 
+std::map<uint32, std::string> WorldDatabase::m_questNames;
+
+void WorldDatabase::LoadQuests()
+{
+    printf("Loading quest database.\n");
+    //                                                              0        1
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `Title` FROM `quest_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `quest_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 entry = pFields[0].getUInt32();
+            std::string name = pFields[1].getCppString();
+            m_questNames.insert(std::make_pair(entry, name));
+
+        } while (result->NextRow());
+    }
+}
+
 std::map<uint32, std::string> WorldDatabase::m_spellNames;
 
 void WorldDatabase::LoadSpells()

@@ -11,7 +11,7 @@ inline std::string FormatObjectName(uint32 guid, uint32 id, std::string type)
 {
     std::string name;
     if (type == "Player")
-        name = type;
+        name = type + " (Guid: " + std::to_string(guid) + ")";
     else if (type == "Creature")
         name = "Creature " + WorldDatabase::GetCreatureName(id) + " (Guid: " + std::to_string(guid) + " Entry: " + std::to_string(id) + ")";
     else if (type == "GameObject")
@@ -130,15 +130,16 @@ struct SniffedEvent_CreatureDestroy : SniffedEvent
 
 struct SniffedEvent_CreatureText : SniffedEvent
 {
-    SniffedEvent_CreatureText(uint32 entry, std::string text, uint32 chatType, std::string comment) : 
-        m_entry(entry), m_chatType(chatType), m_text(text), m_comment(comment) {};
+    SniffedEvent_CreatureText(uint32 guid, uint32 entry, std::string text, uint32 chatType, std::string comment) : 
+        m_guid(guid), m_entry(entry), m_chatType(chatType), m_text(text), m_comment(comment) {};
+    uint32 m_guid = 0;
     uint32 m_entry = 0;
     uint32 m_chatType = 0;
     std::string m_text;
     std::string m_comment;
     std::string ToString(bool singleLine) const final
     {
-        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Entry: " + std::to_string(m_entry) + ") says text id " + std::to_string(WorldDatabase::GetBroadcastTextId(m_text));
+        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") says text id " + std::to_string(WorldDatabase::GetBroadcastTextId(m_text));
         if (singleLine)
         {
             txt += ": \"" + m_text + "\"";
@@ -519,9 +520,10 @@ struct SniffedEvent_PlayMusic : SniffedEvent
 
 struct SniffedEvent_PlaySound : SniffedEvent
 {
-    SniffedEvent_PlaySound(uint32 sound, uint32 sourceId, std::string sourceType) :
-        m_sound(sound), m_sourceId(sourceId), m_sourceType(sourceType) {};
+    SniffedEvent_PlaySound(uint32 sound, uint32 sourceGuid, uint32 sourceId, std::string sourceType) :
+        m_sound(sound), m_sourceGuid(sourceGuid), m_sourceId(sourceId), m_sourceType(sourceType) {};
     uint32 m_sound = 0;
+    uint32 m_sourceGuid = 0;
     uint32 m_sourceId = 0;
     std::string m_sourceType;
     std::string ToString(bool singleLine) const final
@@ -530,7 +532,7 @@ struct SniffedEvent_PlaySound : SniffedEvent
         if (singleLine)
         {
             if (m_sourceId != 0)
-                txt = m_sourceType + " " + std::to_string(m_sourceId) + " plays sound " + std::to_string(m_sound) + " (" + WorldDatabase::GetSoundName(m_sound) + ").";
+                txt = FormatObjectName(m_sourceGuid, m_sourceId, m_sourceType) + " plays sound " + std::to_string(m_sound) + " (" + WorldDatabase::GetSoundName(m_sound) + ").";
             else
                 txt = "Sound " + std::to_string(m_sound) + " (" + WorldDatabase::GetSoundName(m_sound) + ") plays.";
         }
@@ -538,7 +540,7 @@ struct SniffedEvent_PlaySound : SniffedEvent
         {
             txt = "Sound " + std::to_string(m_sound) + " (" + WorldDatabase::GetSoundName(m_sound) + ") plays.";
             if (m_sourceId != 0)
-                txt += " Source is " + m_sourceType + " " + std::to_string(m_sourceId) + ".";
+                txt += " Source is " + FormatObjectName(m_sourceGuid, m_sourceId, m_sourceType) + ".";
         }
         
         return txt;
@@ -617,14 +619,15 @@ struct SniffedEvent_SpellCastGo: SniffedEvent
 
 struct SniffedEvent_QuestAccept : SniffedEvent
 {
-    SniffedEvent_QuestAccept(uint32 questId, uint32 objectId, std::string objectType) :
-        m_questId(questId), m_objectId(objectId), m_objectType(objectType) {};
+    SniffedEvent_QuestAccept(uint32 questId, uint32 objectGuid, uint32 objectId, std::string objectType) :
+        m_questId(questId), m_objectGuid(objectGuid), m_objectId(objectId), m_objectType(objectType) {};
     uint32 m_questId = 0;
+    uint32 m_objectGuid = 0;
     uint32 m_objectId = 0;
     std::string m_objectType;
     std::string ToString(bool /*singleLine*/) const final
     {
-        std::string txt = "Client accepts Quest " + std::to_string(m_questId) + " from " + m_objectType + " " + std::to_string(m_objectId) + ".";
+        std::string txt = "Client accepts Quest " + std::to_string(m_questId) + " from " + FormatObjectName(m_objectGuid, m_objectId, m_objectType) + ".";
         return txt;
     }
     SniffedEventType GetType() const final
@@ -635,14 +638,15 @@ struct SniffedEvent_QuestAccept : SniffedEvent
 
 struct SniffedEvent_QuestComplete : SniffedEvent
 {
-    SniffedEvent_QuestComplete(uint32 questId, uint32 objectId, std::string objectType) :
-        m_questId(questId), m_objectId(objectId), m_objectType(objectType) {};
+    SniffedEvent_QuestComplete(uint32 questId, uint32 objectGuid, uint32 objectId, std::string objectType) :
+        m_questId(questId), m_objectGuid(objectGuid), m_objectId(objectId), m_objectType(objectType) {};
     uint32 m_questId = 0;
+    uint32 m_objectGuid = 0;
     uint32 m_objectId = 0;
     std::string m_objectType;
     std::string ToString(bool /*singleLine*/) const final
     {
-        std::string txt = "Client turns in Quest " + std::to_string(m_questId) + " to " + m_objectType + " " + std::to_string(m_objectId) + ".";
+        std::string txt = "Client turns in Quest " + std::to_string(m_questId) + " to " + FormatObjectName(m_objectGuid, m_objectId, m_objectType) + ".";
         return txt;
     }
     SniffedEventType GetType() const final

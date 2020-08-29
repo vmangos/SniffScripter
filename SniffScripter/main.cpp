@@ -63,6 +63,7 @@ enum
     OPTION_TIMELINE_SPECIFIC_GUIDS  = 1,
     OPTION_TIMELINE_ALL_EVENTS      = 2,
     OPTION_TIMELINE_WAYPOINTS       = 3,
+    OPTION_QUESTS_WITH_RP_EVENTS    = 4,
 };
 
 int main()
@@ -85,6 +86,7 @@ int main()
     printf("1. Create timeline for specific guids\n");
     printf("2. Create timeline for all in time period\n");
     printf("3. Create waypoints and show events as comments\n");
+    printf("4. List quests with RP events\n");
     printf("> ");
 
     uint32 option = 0;
@@ -93,7 +95,7 @@ int main()
 
     time_t startTime = 0;
 
-    if (option == OPTION_TIMELINE_SPECIFIC_GUIDS || option == OPTION_TIMELINE_ALL_EVENTS || option == OPTION_TIMELINE_WAYPOINTS)
+    if (option == OPTION_TIMELINE_SPECIFIC_GUIDS || option == OPTION_TIMELINE_ALL_EVENTS || option == OPTION_TIMELINE_WAYPOINTS || option == OPTION_QUESTS_WITH_RP_EVENTS)
     {
         
         printf("Enter sniff database name: ");
@@ -186,6 +188,19 @@ int main()
                     GetChar();
                     return 1;
                 }
+            }
+        }
+        else if (option == OPTION_QUESTS_WITH_RP_EVENTS)
+        {
+            printf("Time limit: ");
+            uint32 duration = 0;
+            if (scanf("%u", &duration) == 1)
+            {
+                printf("Searching for quests with an event on accept or completion...\n");
+                if (!TimelineMaker::FindQuestsWithRpEvents(duration))
+                    printf("No quests with scripted events found.\n");
+                GetChar();
+                return 0;
             }
         }
     }

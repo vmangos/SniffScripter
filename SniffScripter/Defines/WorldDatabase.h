@@ -18,6 +18,7 @@ public:
     static void LoadCreatures();
     static void LoadGameObjects();
     static void LoadItems();
+    static void LoadQuests();
     static void LoadSpells();
     static void LoadFactions();
     static void LoadSounds();
@@ -28,6 +29,7 @@ public:
         LoadCreatures();
         LoadGameObjects();
         LoadItems();
+        LoadQuests();
         LoadSpells();
         LoadFactions();
         LoadSounds();
@@ -52,6 +54,13 @@ public:
     {
         auto const itr = m_itemNames.find(id);
         if (itr != m_itemNames.cend())
+            return itr->second;
+        return "UNKNOWN";
+    }
+    static std::string GetQuestName(uint32 id)
+    {
+        auto const itr = m_questNames.find(id);
+        if (itr != m_questNames.cend())
             return itr->second;
         return "UNKNOWN";
     }
@@ -89,6 +98,7 @@ private:
     static std::map<uint32, std::string> m_creatureNames;
     static std::map<uint32, std::string> m_gameObjectNames;
     static std::map<uint32, std::string> m_itemNames;
+    static std::map<uint32, std::string> m_questNames;
     static std::map<uint32, std::string> m_spellNames;
     static std::map<uint32, std::string> m_factionNames;
     static std::map<uint32, std::string> m_soundNames;
