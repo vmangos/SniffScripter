@@ -139,23 +139,101 @@ int main()
             }
 
             printf("Show when client accepted or turned in quests? (y/n)\n> ");
-            char showQuests = GetChar();
+            bool showQuests = GetChar() == 'y';
 
             printf("Show when client used gameobjects? (y/n)\n> ");
-            char showUseGo = GetChar();
+            bool showUseGo = GetChar() == 'y';
 
             printf("Show when client used items? (y/n)\n> ");
-            char showUseItem = GetChar();
+            bool showUseItem = GetChar() == 'y';
 
+            printf("Show when creatures attacked something? (y/n)\n> ");
+            bool showAttacks = GetChar() == 'y';
+
+            printf("Show when creatures said something? (y/n)\n> ");
+            bool showTexts = GetChar() == 'y';
+
+            printf("Show when creatures played an emote? (y/n)\n> ");
+            bool showEmotes = GetChar() == 'y';
+
+            printf("Show when creatures moved? (y/n)\n> ");
+            bool showMoves = GetChar() == 'y';
+
+            printf("Show spell casts? (y/n)\n> ");
+            bool showCasts = GetChar() == 'y';
+
+            printf("Show changes to update fields? (y/n)\n> ");
+            bool showUpdates = GetChar() == 'y';
+
+            printf("Show when sounds or music played? (y/n)\n> ");
+            bool showSounds = GetChar() == 'y';
+            
             uint32 uiStartTime = 0;
             printf("Start time: ");
             scanf("%u", &uiStartTime);
             startTime = uiStartTime;
 
-            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showQuests == 'y', showUseGo == 'y', showUseItem == 'y');
+            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showQuests, showUseGo, showUseItem, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
         }
         else if (option == OPTION_TIMELINE_ALL_EVENTS)
         {
+            printf("Show when client accepted or turned in quests? (y/n)\n> ");
+            bool showQuests = GetChar() == 'y';
+
+            printf("Show when client used gameobjects? (y/n)\n> ");
+            bool showUseGo = GetChar() == 'y';
+
+            printf("Show when client used items? (y/n)\n> ");
+            bool showUseItem = GetChar() == 'y';
+
+            printf("Show creature related events? (y/n)\n> ");
+            bool showCreatures = GetChar() == 'y';
+            bool showCreatureAttacks = false;
+            bool showCreatureTexts = false;
+            bool showCreatureEmotes = false;
+            bool showCreatureMoves = false;
+            bool showCreatureCasts = false;
+            bool showCreatureUpdates = false;
+            if (showCreatures)
+            {
+                printf("Show when creatures attacked something? (y/n)\n> ");
+                showCreatureAttacks = GetChar() == 'y';
+
+                printf("Show when creatures said something? (y/n)\n> ");
+                showCreatureTexts = GetChar() == 'y';
+
+                printf("Show when creatures played an emote? (y/n)\n> ");
+                showCreatureEmotes = GetChar() == 'y';
+
+                printf("Show when creatures moved? (y/n)\n> ");
+                showCreatureMoves = GetChar() == 'y';
+
+                printf("Show when creatures casted spells? (y/n)\n> ");
+                showCreatureCasts = GetChar() == 'y';
+
+                printf("Show changes to creature update fields? (y/n)\n> ");
+                showCreatureUpdates = GetChar() == 'y';
+            }
+            
+            printf("Show gameobject related events? (y/n)\n> ");
+            bool showGameObjects = GetChar() == 'y';
+            bool showGameObjectCasts = false;
+            bool showGameObjectUpdates = false;
+            if (showGameObjects)
+            {
+                printf("Show when gameobjects casted spells? (y/n)\n> ");
+                showGameObjectCasts = GetChar() == 'y';
+
+                printf("Show changes to gameobject update fields? (y/n)\n> ");
+                showGameObjectUpdates = GetChar() == 'y';
+            }
+
+            printf("Show spell casts? (y/n)\n> ");
+            bool showCasts = GetChar() == 'y';
+
+            printf("Show when sounds or music played? (y/n)\n> ");
+            bool showSounds = GetChar() == 'y';
+
             uint32 uiStartTime = 0;
             printf("Start time: ");
             scanf("%u", &uiStartTime);
@@ -166,7 +244,7 @@ int main()
             scanf("%u", &uiEndTime);
             uiEndTime = uiStartTime + uiEndTime;
 
-            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime);
+            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showQuests, showUseGo, showUseItem, showCreatures, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectCasts, showGameObjectUpdates, showSounds);
         }
         else if (option == OPTION_TIMELINE_WAYPOINTS)
         {

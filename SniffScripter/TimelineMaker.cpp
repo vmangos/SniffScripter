@@ -10,7 +10,7 @@
 extern Database GameDb;
 std::multimap<time_t, std::shared_ptr<SniffedEvent>> TimelineMaker::m_eventsMap;
 
-void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint32>& vCreatureGuids, std::vector<uint32> vGameObjectGuids, bool showQuests, bool showGoUse, bool showItemUse)
+void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint32>& vCreatureGuids, std::vector<uint32> vGameObjectGuids, bool showQuests, bool showGoUse, bool showItemUse, bool showAttacks, bool showTexts, bool showEmotes, bool showMoves, bool showUpdates, bool showCasts, bool showSounds)
 {
     for (const auto& guid : vCreatureGuids)
     {
@@ -28,106 +28,118 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
             SniffDatabase::LoadCreatureCreate2(whereClause);
         }
 
+        if (showAttacks)
         {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureDestroy(whereClause);
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureAttackStart(whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureAttackStop(whereClause);
+            }
         }
 
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureEmote(whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureAttackStart(whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureAttackStop(whereClause);
-        }
-
+        if (showTexts)
         {
             char whereClause[128] = {};
             sprintf(whereClause, "(`CreatureGuid` = %u) && (`UnixTime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadCreatureText(whereClause);
         }
 
+        if (showEmotes)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            SniffDatabase::LoadCreatureEmote(whereClause);
+        }
+
+        if (showMoves)
         {
             char whereClause[128] = {};
             sprintf(whereClause, "(`id` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadCreatureMovement(whereClause);
         }
 
+        if (showUpdates)
         {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entry>("entry", whereClause);
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entry>("entry", whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_display_id>("display_id", whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_faction>("faction", whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_emote_state>("emote_state", whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_stand_state>("stand_state", whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
+            }
+        }
+
+        if (showCasts)
+        {
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadSpellCastStart(whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CasterGuid` != %u) && (`TargetGuid` = %u) && (`TargetType` = 'Creature') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
+                SniffDatabase::LoadSpellCastStart(whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadSpellCastGo(whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CasterGuid` != %u) && (`MainTargetGuid` = %u) && (`MainTargetType` = 'Creature') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
+                SniffDatabase::LoadSpellCastGo(whereClause);
+            }
         }
 
         {
             char whereClause[128] = {};
             sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_display_id>("display_id", whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_faction>("faction", whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_emote_state>("emote_state", whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_stand_state>("stand_state", whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadSpellCastStart(whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterGuid` != %u) && (`TargetGuid` = %u) && (`TargetType` = 'Creature') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
-            SniffDatabase::LoadSpellCastStart(whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadSpellCastGo(whereClause);
-        }
-
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterGuid` != %u) && (`MainTargetGuid` = %u) && (`MainTargetType` = 'Creature') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
-            SniffDatabase::LoadSpellCastGo(whereClause);
+            SniffDatabase::LoadCreatureDestroy(whereClause);
         }
     }
 
@@ -154,40 +166,46 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
             SniffDatabase::LoadGameObjectUseTimes(whereClause);
         }
 
+        if (showUpdates)
         {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_flags>("flags", whereClause);
-        }
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_flags>("flags", whereClause);
+            }
 
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
+            }
         }
-
+        
+        if (showCasts)
         {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'GameObject') && (`UnixTime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadSpellCastStart(whereClause);
-        }
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'GameObject') && (`UnixTime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadSpellCastStart(whereClause);
+            }
 
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterGuid` != %u) && (`TargetGuid` = %u) && (`TargetType` = 'GameObject') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
-            SniffDatabase::LoadSpellCastStart(whereClause);
-        }
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CasterGuid` != %u) && (`TargetGuid` = %u) && (`TargetType` = 'GameObject') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
+                SniffDatabase::LoadSpellCastStart(whereClause);
+            }
 
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'GameObject') && (`UnixTime` >= %u)", guid, uiStartTime);
-            SniffDatabase::LoadSpellCastGo(whereClause);
-        }
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'GameObject') && (`UnixTime` >= %u)", guid, uiStartTime);
+                SniffDatabase::LoadSpellCastGo(whereClause);
+            }
 
-        {
-            char whereClause[128] = {};
-            sprintf(whereClause, "(`CasterGuid` != %u) && (`MainTargetGuid` = %u) && (`MainTargetType` = 'GameObject') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
-            SniffDatabase::LoadSpellCastGo(whereClause);
+            {
+                char whereClause[128] = {};
+                sprintf(whereClause, "(`CasterGuid` != %u) && (`MainTargetGuid` = %u) && (`MainTargetType` = 'GameObject') && (`UnixTime` >= %u)", guid, guid, uiStartTime);
+                SniffDatabase::LoadSpellCastGo(whereClause);
+            }
         }
 
         {
@@ -199,16 +217,19 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
 
     uint32 uiEndTime = !m_eventsMap.empty() ? m_eventsMap.rbegin()->first : UINT32_MAX;
 
+    if (showSounds)
     {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadPlayMusic(whereClause);
-    }
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadPlayMusic(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadPlaySound(whereClause);
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadPlaySound(whereClause);
+        }
     }
 
     if (showQuests)
@@ -240,28 +261,32 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
     }
 }
 
-void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime)
+void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, bool showQuests, bool showUseGo, bool showUseItem, bool showCreatures, bool showCreatureAttacks, bool showCreatureTexts, bool showCreatureEmotes, bool showCreatureMoves, bool showCreatureCasts, bool showCreatureUpdates, bool showGameObjects, bool showGameObjectCasts, bool showGameObjectUpdates, bool showSounds)
 {
     // Client Actions
 
+    if (showQuests)
     {
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
         SniffDatabase::LoadQuestAcceptTimes(whereClause);
     }
 
+    if (showQuests)
     {
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
         SniffDatabase::LoadQuestCompleteTimes(whereClause);
     }
 
+    if (showUseItem)
     {
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
         SniffDatabase::LoadItemUseTimes(whereClause);
     }
 
+    if (showUseGo)
     {
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
@@ -270,154 +295,191 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime)
 
     // Creatures
 
+    if (showCreatures)
     {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureCreate1(whereClause);
-    }
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureCreate1(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureCreate2(whereClause);
-    }
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureCreate2(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureDestroy(whereClause);
-    }
+        if (showCreatureAttacks)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureAttackStart(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureEmote(whereClause);
-    }
+        if (showCreatureAttacks)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureAttackStop(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureAttackStart(whereClause);
-    }
+        if (showCreatureTexts)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`UnixTime` >= %u) && (`UnixTime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureText(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureAttackStop(whereClause);
-    }
+        if (showCreatureEmotes)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureEmote(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`UnixTime` >= %u) && (`UnixTime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureText(whereClause);
-    }
+        if (showCreatureMoves)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureMovement(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureMovement(whereClause);
-    }
+        if (showCreatureCasts)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`UnixTime` >= %u) && (`UnixTime` <= %u) && (`CasterType`='Creature')", uiStartTime, uiEndTime);
+            SniffDatabase::LoadSpellCastStart(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entry>("entry", whereClause);
-    }
+        if (showCreatureCasts)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`UnixTime` >= %u) && (`UnixTime` <= %u) && (`CasterType`='Creature')", uiStartTime, uiEndTime);
+            SniffDatabase::LoadSpellCastGo(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_display_id>("display_id", whereClause);
-    }
+        if (showCreatureUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entry>("entry", whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_faction>("faction", whereClause);
-    }
+        if (showCreatureUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_display_id>("display_id", whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_emote_state>("emote_state", whereClause);
-    }
+        if (showCreatureUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_faction>("faction", whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_stand_state>("stand_state", whereClause);
-    }
+        if (showCreatureUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_emote_state>("emote_state", whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
-    }
+        if (showCreatureUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_stand_state>("stand_state", whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
+        if (showCreatureUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
+        }
+
+        if (showCreatureUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
+        }
+
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureDestroy(whereClause);
+        }
     }
+    
 
     // GameObjects
-
+    if (showGameObjects)
     {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadGameObjectCreate1(whereClause);
-    }
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadGameObjectCreate1(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadGameObjectCreate2(whereClause);
-    }
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadGameObjectCreate2(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadGameObjectDestroy(whereClause);
-    }
+        if (showGameObjectCasts)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`UnixTime` >= %u) && (`UnixTime` <= %u) && (`CasterType`='GameObject')", uiStartTime, uiEndTime);
+            SniffDatabase::LoadSpellCastStart(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_flags>("flags", whereClause);
-    }
+        if (showGameObjectCasts)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`UnixTime` >= %u) && (`UnixTime` <= %u) && (`CasterType`='GameObject')", uiStartTime, uiEndTime);
+            SniffDatabase::LoadSpellCastGo(whereClause);
+        }
 
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
+        if (showGameObjectUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_flags>("flags", whereClause);
+        }
+
+        if (showGameObjectUpdates)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
+        }
+
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            SniffDatabase::LoadGameObjectDestroy(whereClause);
+        }
     }
+    
 
     // Sounds and Music
 
+    if (showSounds)
     {
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
         SniffDatabase::LoadPlayMusic(whereClause);
     }
 
+    if (showSounds)
     {
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
         SniffDatabase::LoadPlaySound(whereClause);
-    }
-
-    // Casts
-
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`UnixTime` >= %u) && (`UnixTime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadSpellCastStart(whereClause);
-    }
-
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`UnixTime` >= %u) && (`UnixTime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadSpellCastGo(whereClause);
     }
 }
 
