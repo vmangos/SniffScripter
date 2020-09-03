@@ -7,6 +7,36 @@
 #include "GameEnums.h"
 #include "WorldDatabase.h"
 
+struct KnownObject
+{
+    KnownObject() {};
+    KnownObject(uint32 guid, uint32 entry, std::string type) :
+        m_guid(guid), m_entry(entry), m_type(type) {};
+    uint32 m_guid;
+    uint32 m_entry;
+    std::string m_type;
+    bool operator==(KnownObject const& other) const
+    {
+        return m_guid == other.m_guid &&
+               m_entry == other.m_entry &&
+               m_type == other.m_type;
+    }
+    bool operator!=(KnownObject const& other) const
+    {
+        return !(m_guid == other.m_guid &&
+                 m_entry == other.m_entry &&
+                 m_type == other.m_type);
+    }
+    bool operator<(KnownObject const& other) const
+    {
+        return m_guid < other.m_guid;
+    }
+    bool IsEmpty()
+    {
+        return m_type.empty();
+    }
+};
+
 inline std::string FormatObjectName(uint32 guid, uint32 id, std::string type)
 {
     std::string name;
@@ -19,6 +49,25 @@ inline std::string FormatObjectName(uint32 guid, uint32 id, std::string type)
     else
         name = type + " " + std::to_string(id);
     return name;
+}
+
+inline std::string FormatObjectName(KnownObject const& object)
+{
+    return FormatObjectName(object.m_guid, object.m_entry, object.m_type);
+}
+
+inline std::string GetObjectName(uint32 id, std::string type)
+{
+    if (type == "Creature")
+        return WorldDatabase::GetCreatureName(id);
+    else if (type == "GameObject")
+        return  WorldDatabase::GetGameObjectName(id);
+    return "";
+}
+
+inline std::string GetObjectName(KnownObject const& object)
+{
+    return GetObjectName(object.m_entry, object.m_type);
 }
 
 enum SniffedEventType : uint8
@@ -58,6 +107,8 @@ struct SniffedEvent
 {
     virtual std::string ToString(bool singleLine) const = 0;
     virtual SniffedEventType GetType() const = 0;
+    virtual KnownObject GetSourceObject() const { return KnownObject(); };
+    virtual KnownObject GetTargetObject() const { return KnownObject(); };
 };
 
 struct SniffedEvent_CreatureCreate1 : SniffedEvent
@@ -83,6 +134,10 @@ struct SniffedEvent_CreatureCreate1 : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_CREATE1;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -110,6 +165,10 @@ struct SniffedEvent_CreatureCreate2 : SniffedEvent
     {
         return SE_CREATURE_CREATE2;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
+    }
 };
 
 struct SniffedEvent_CreatureDestroy : SniffedEvent
@@ -125,6 +184,10 @@ struct SniffedEvent_CreatureDestroy : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_DESTROY;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -147,7 +210,7 @@ struct SniffedEvent_CreatureText : SniffedEvent
         else
         {
             txt += ".\nText: " + m_text + "\n";
-            txt += "Chat Type: " + std::to_string(m_chatType) + "\n";
+            txt += "Chat Type: " + GetGetChatTypeName(ConvertChatTypeToVmangosFormat(m_chatType)) + "\n";
             txt += "Comment: " + m_comment;
         }
         
@@ -156,6 +219,10 @@ struct SniffedEvent_CreatureText : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_TEXT;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -174,6 +241,10 @@ struct SniffedEvent_CreatureEmote : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_EMOTE;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -195,6 +266,14 @@ struct SniffedEvent_CreatureAttackStart : SniffedEvent
     {
         return SE_CREATURE_ATTACK_START;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
+    }
+    KnownObject GetTargetObject() const final
+    {
+        return KnownObject(m_victimGuid, m_victimId, m_victimType);
+    }
 };
 
 struct SniffedEvent_CreatureAttackStop : SniffedEvent
@@ -214,6 +293,14 @@ struct SniffedEvent_CreatureAttackStop : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_ATTACK_STOP;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
+    }
+    KnownObject GetTargetObject() const final
+    {
+        return KnownObject(m_victimGuid, m_victimId, m_victimType);
     }
 };
 
@@ -244,6 +331,10 @@ struct SniffedEvent_CreatureMovement : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_MOVEMENT;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -281,12 +372,16 @@ struct SniffedEvent_CreatureUpdate_entry : SniffedEvent
     uint32 m_value = 0;
     std::string ToString(bool /*singleLine*/) const final
     {
-        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") updates entry to " + std::to_string(m_value) + " (" + WorldDatabase::GetCreatureName(m_entry) + ").";
+        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") updates entry to " + std::to_string(m_value) + " (" + WorldDatabase::GetCreatureName(m_value) + ").";
         return txt;
     }
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_UPDATE_ENTRY;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -306,6 +401,10 @@ struct SniffedEvent_CreatureUpdate_display_id : SniffedEvent
     {
         return SE_CREATURE_UPDATE_DISPLAY_ID;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
+    }
 };
 
 struct SniffedEvent_CreatureUpdate_faction : SniffedEvent
@@ -323,6 +422,10 @@ struct SniffedEvent_CreatureUpdate_faction : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_UPDATE_FACTION;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -342,6 +445,10 @@ struct SniffedEvent_CreatureUpdate_emote_state : SniffedEvent
     {
         return SE_CREATURE_UPDATE_EMOTE_STATE;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
+    }
 };
 
 struct SniffedEvent_CreatureUpdate_stand_state : SniffedEvent
@@ -359,6 +466,10 @@ struct SniffedEvent_CreatureUpdate_stand_state : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_UPDATE_STAND_STATE;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -378,6 +489,10 @@ struct SniffedEvent_CreatureUpdate_npc_flags : SniffedEvent
     {
         return SE_CREATURE_UPDATE_NPC_FLAGS;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
+    }
 };
 
 struct SniffedEvent_CreatureUpdate_unit_flags : SniffedEvent
@@ -395,6 +510,10 @@ struct SniffedEvent_CreatureUpdate_unit_flags : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CREATURE_UPDATE_UNIT_FLAGS;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
     }
 };
 
@@ -422,6 +541,10 @@ struct SniffedEvent_GameObjectCreate1 : SniffedEvent
     {
         return SE_GAMEOBJECT_CREATE1;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "GameObject");
+    }
 };
 
 struct SniffedEvent_GameObjectCreate2 : SniffedEvent
@@ -448,6 +571,10 @@ struct SniffedEvent_GameObjectCreate2 : SniffedEvent
     {
         return SE_GAMEOBJECT_CREATE2;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "GameObject");
+    }
 };
 
 struct SniffedEvent_GameObjectDestroy : SniffedEvent
@@ -463,6 +590,10 @@ struct SniffedEvent_GameObjectDestroy : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_GAMEOBJECT_DESTROY;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "GameObject");
     }
 };
 
@@ -482,6 +613,10 @@ struct SniffedEvent_GameObjectUpdate_flags : SniffedEvent
     {
         return SE_GAMEOBJECT_UPDATE_FLAGS;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "GameObject");
+    }
 };
 
 struct SniffedEvent_GameObjectUpdate_state : SniffedEvent
@@ -499,6 +634,10 @@ struct SniffedEvent_GameObjectUpdate_state : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_GAMEOBJECT_UPDATE_STATE;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "GameObject");
     }
 };
 
@@ -549,6 +688,10 @@ struct SniffedEvent_PlaySound : SniffedEvent
     {
         return SE_PLAY_SOUND;
     }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_sourceGuid, m_sourceId, m_sourceType);
+    }
 };
 
 struct SniffedEvent_SpellCastStart : SniffedEvent
@@ -574,6 +717,14 @@ struct SniffedEvent_SpellCastStart : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_SPELL_CAST_START;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_casterGuid, m_casterId, m_casterType);
+    }
+    KnownObject GetTargetObject() const final
+    {
+        return KnownObject(m_targetGuid, m_targetId, m_targetType);
     }
 };
 
@@ -614,6 +765,14 @@ struct SniffedEvent_SpellCastGo: SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_SPELL_CAST_GO;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_casterGuid, m_casterId, m_casterType);
+    }
+    KnownObject GetTargetObject() const final
+    {
+        return KnownObject(m_targetGuid, m_targetId, m_targetType);
     }
 };
 

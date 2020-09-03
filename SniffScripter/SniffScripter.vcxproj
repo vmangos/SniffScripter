@@ -86,6 +86,8 @@
     <ClInclude Include="Database\SafeQueue.h" />
     <ClInclude Include="Defines\Common.h" />
     <ClInclude Include="Defines\GameEnums.h" />
+    <ClInclude Include="Defines\Helpers.h" />
+    <ClInclude Include="Defines\ScriptCommands.h" />
     <ClInclude Include="Defines\SniffDatabase.h" />
     <ClInclude Include="Defines\SniffedEvents.h" />
     <ClInclude Include="Defines\TimelineMaker.h" />
@@ -96,6 +98,7 @@
     <ClCompile Include="Database\DbField.cpp" />
     <ClCompile Include="Database\QueryObject.cpp" />
     <ClCompile Include="Database\QueryResult.cpp" />
+    <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SniffDatabase.cpp" />
     <ClCompile Include="TimelineMaker.cpp" />

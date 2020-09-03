@@ -290,110 +290,182 @@ inline std::string GetStandStateName(uint32 state)
     return "UNKNOWN";
 }
 
-enum NPCFlags : uint32
+namespace Classic
 {
-    UNIT_NPC_FLAG_GOSSIP                = 0x00000001,     // 100%
-    UNIT_NPC_FLAG_QUESTGIVER            = 0x00000002,     // 100%
-    UNIT_NPC_FLAG_UNK1                  = 0x00000004,
-    UNIT_NPC_FLAG_UNK2                  = 0x00000008,
-    UNIT_NPC_FLAG_TRAINER               = 0x00000010,     // 100%
-    UNIT_NPC_FLAG_TRAINER_CLASS         = 0x00000020,     // 100%
-    UNIT_NPC_FLAG_TRAINER_PROFESSION    = 0x00000040,     // 100%
-    UNIT_NPC_FLAG_VENDOR                = 0x00000080,     // 100%
-    UNIT_NPC_FLAG_VENDOR_AMMO           = 0x00000100,     // 100%, general goods vendor
-    UNIT_NPC_FLAG_VENDOR_FOOD           = 0x00000200,     // 100%
-    UNIT_NPC_FLAG_VENDOR_POISON         = 0x00000400,     // guessed
-    UNIT_NPC_FLAG_VENDOR_REAGENT        = 0x00000800,     // 100%
-    UNIT_NPC_FLAG_REPAIR                = 0x00001000,     // 100%
-    UNIT_NPC_FLAG_FLIGHTMASTER          = 0x00002000,     // 100%
-    UNIT_NPC_FLAG_SPIRITHEALER          = 0x00004000,     // guessed
-    UNIT_NPC_FLAG_SPIRITGUIDE           = 0x00008000,     // guessed
-    UNIT_NPC_FLAG_INNKEEPER             = 0x00010000,     // 100%
-    UNIT_NPC_FLAG_BANKER                = 0x00020000,     // 100%
-    UNIT_NPC_FLAG_PETITIONER            = 0x00040000,     // 100% 0xC0000 = guild petitions, 0x40000 = arena team petitions
-    UNIT_NPC_FLAG_TABARDDESIGNER        = 0x00080000,     // 100%
-    UNIT_NPC_FLAG_BATTLEMASTER          = 0x00100000,     // 100%
-    UNIT_NPC_FLAG_AUCTIONEER            = 0x00200000,     // 100%
-    UNIT_NPC_FLAG_STABLEMASTER          = 0x00400000,     // 100%
-    UNIT_NPC_FLAG_GUILD_BANKER          = 0x00800000,     //
-    UNIT_NPC_FLAG_SPELLCLICK            = 0x01000000,     //
-    UNIT_NPC_FLAG_PLAYER_VEHICLE        = 0x02000000,     // players with mounts that have vehicle data should have it set
-    UNIT_NPC_FLAG_MAILBOX               = 0x04000000,     // mailbox
-    UNIT_NPC_FLAG_ARTIFACT_POWER_RESPEC = 0x08000000,     // artifact powers reset
-    UNIT_NPC_FLAG_TRANSMOGRIFIER        = 0x10000000,     // transmogrification
-    UNIT_NPC_FLAG_VAULTKEEPER           = 0x20000000,     // void storage
-    UNIT_NPC_FLAG_WILD_BATTLE_PET       = 0x40000000,     // Pet that player can fight (Battle Pet)
-    UNIT_NPC_FLAG_BLACK_MARKET          = 0x80000000,     // black market
-    MAX_NPC_FLAGS = 32
-};
+    enum NPCFlags_Classic : uint32
+    {
+        UNIT_NPC_FLAG_GOSSIP                = 0x00000001,     // 100%
+        UNIT_NPC_FLAG_QUESTGIVER            = 0x00000002,     // 100%
+        UNIT_NPC_FLAG_UNK1                  = 0x00000004,
+        UNIT_NPC_FLAG_UNK2                  = 0x00000008,
+        UNIT_NPC_FLAG_TRAINER               = 0x00000010,     // 100%
+        UNIT_NPC_FLAG_TRAINER_CLASS         = 0x00000020,     // 100%
+        UNIT_NPC_FLAG_TRAINER_PROFESSION    = 0x00000040,     // 100%
+        UNIT_NPC_FLAG_VENDOR                = 0x00000080,     // 100%
+        UNIT_NPC_FLAG_VENDOR_AMMO           = 0x00000100,     // 100%, general goods vendor
+        UNIT_NPC_FLAG_VENDOR_FOOD           = 0x00000200,     // 100%
+        UNIT_NPC_FLAG_VENDOR_POISON         = 0x00000400,     // guessed
+        UNIT_NPC_FLAG_VENDOR_REAGENT        = 0x00000800,     // 100%
+        UNIT_NPC_FLAG_REPAIR                = 0x00001000,     // 100%
+        UNIT_NPC_FLAG_FLIGHTMASTER          = 0x00002000,     // 100%
+        UNIT_NPC_FLAG_SPIRITHEALER          = 0x00004000,     // guessed
+        UNIT_NPC_FLAG_SPIRITGUIDE           = 0x00008000,     // guessed
+        UNIT_NPC_FLAG_INNKEEPER             = 0x00010000,     // 100%
+        UNIT_NPC_FLAG_BANKER                = 0x00020000,     // 100%
+        UNIT_NPC_FLAG_PETITIONER            = 0x00040000,     // 100% 0xC0000 = guild petitions, 0x40000 = arena team petitions
+        UNIT_NPC_FLAG_TABARDDESIGNER        = 0x00080000,     // 100%
+        UNIT_NPC_FLAG_BATTLEMASTER          = 0x00100000,     // 100%
+        UNIT_NPC_FLAG_AUCTIONEER            = 0x00200000,     // 100%
+        UNIT_NPC_FLAG_STABLEMASTER          = 0x00400000,     // 100%
+        UNIT_NPC_FLAG_GUILD_BANKER          = 0x00800000,     //
+        UNIT_NPC_FLAG_SPELLCLICK            = 0x01000000,     //
+        UNIT_NPC_FLAG_PLAYER_VEHICLE        = 0x02000000,     // players with mounts that have vehicle data should have it set
+        UNIT_NPC_FLAG_MAILBOX               = 0x04000000,     // mailbox
+        UNIT_NPC_FLAG_ARTIFACT_POWER_RESPEC = 0x08000000,     // artifact powers reset
+        UNIT_NPC_FLAG_TRANSMOGRIFIER        = 0x10000000,     // transmogrification
+        UNIT_NPC_FLAG_VAULTKEEPER           = 0x20000000,     // void storage
+        UNIT_NPC_FLAG_WILD_BATTLE_PET       = 0x40000000,     // Pet that player can fight (Battle Pet)
+        UNIT_NPC_FLAG_BLACK_MARKET          = 0x80000000,     // black market
+        MAX_NPC_FLAGS = 32
+    };
+}
+
+namespace Vanilla
+{
+    enum NPCFlags_Vanilla
+    {
+        UNIT_NPC_FLAG_NONE                  = 0x00000000,
+        UNIT_NPC_FLAG_GOSSIP                = 0x00000001,       // 100%
+        UNIT_NPC_FLAG_QUESTGIVER            = 0x00000002,       // 100%
+        UNIT_NPC_FLAG_VENDOR                = 0x00000004,       // 100%
+        UNIT_NPC_FLAG_FLIGHTMASTER          = 0x00000008,       // 100%
+        UNIT_NPC_FLAG_TRAINER               = 0x00000010,       // 100%
+        UNIT_NPC_FLAG_SPIRITHEALER          = 0x00000020,       // guessed
+        UNIT_NPC_FLAG_SPIRITGUIDE           = 0x00000040,       // guessed
+        UNIT_NPC_FLAG_INNKEEPER             = 0x00000080,       // 100%
+        UNIT_NPC_FLAG_BANKER                = 0x00000100,       // 100%
+        UNIT_NPC_FLAG_PETITIONER            = 0x00000200,       // 100% 0xC0000 = guild petitions
+        UNIT_NPC_FLAG_TABARDDESIGNER        = 0x00000400,       // 100%
+        UNIT_NPC_FLAG_BATTLEMASTER          = 0x00000800,       // 100%
+        UNIT_NPC_FLAG_AUCTIONEER            = 0x00001000,       // 100%
+        UNIT_NPC_FLAG_STABLEMASTER          = 0x00002000,       // 100%
+        UNIT_NPC_FLAG_REPAIR                = 0x00004000,       // 100%
+        UNIT_NPC_FLAG_OUTDOORPVP            = 0x20000000,       // custom flag for outdoor pvp creatures || Custom flag
+    };
+}
+
+inline uint32 ConvertClassicNpcFlagToVanilla(uint32 flag)
+{
+    switch (flag)
+    {
+        case Classic::UNIT_NPC_FLAG_GOSSIP:
+            return Vanilla::UNIT_NPC_FLAG_GOSSIP;
+        case Classic::UNIT_NPC_FLAG_QUESTGIVER:
+            return Vanilla::UNIT_NPC_FLAG_QUESTGIVER;
+        case Classic::UNIT_NPC_FLAG_TRAINER:
+        case Classic::UNIT_NPC_FLAG_TRAINER_CLASS:
+        case Classic::UNIT_NPC_FLAG_TRAINER_PROFESSION:
+            return Vanilla::UNIT_NPC_FLAG_TRAINER;
+        case Classic::UNIT_NPC_FLAG_VENDOR:
+        case Classic::UNIT_NPC_FLAG_VENDOR_AMMO:
+        case Classic::UNIT_NPC_FLAG_VENDOR_FOOD:
+        case Classic::UNIT_NPC_FLAG_VENDOR_POISON:
+        case Classic::UNIT_NPC_FLAG_VENDOR_REAGENT:
+            return Vanilla::UNIT_NPC_FLAG_VENDOR;
+        case Classic::UNIT_NPC_FLAG_REPAIR:
+            return Vanilla::UNIT_NPC_FLAG_REPAIR;
+        case Classic::UNIT_NPC_FLAG_FLIGHTMASTER:
+            return Vanilla::UNIT_NPC_FLAG_FLIGHTMASTER;
+        case Classic::UNIT_NPC_FLAG_SPIRITHEALER:
+            return Vanilla::UNIT_NPC_FLAG_SPIRITHEALER;
+        case Classic::UNIT_NPC_FLAG_SPIRITGUIDE:
+            return Vanilla::UNIT_NPC_FLAG_SPIRITGUIDE;
+        case Classic::UNIT_NPC_FLAG_INNKEEPER:
+            return Vanilla::UNIT_NPC_FLAG_INNKEEPER;
+        case Classic::UNIT_NPC_FLAG_BANKER:
+            return Vanilla::UNIT_NPC_FLAG_BANKER;
+        case Classic::UNIT_NPC_FLAG_PETITIONER:
+            return Vanilla::UNIT_NPC_FLAG_PETITIONER;
+        case Classic::UNIT_NPC_FLAG_TABARDDESIGNER:
+            return Vanilla::UNIT_NPC_FLAG_TABARDDESIGNER;
+        case Classic::UNIT_NPC_FLAG_BATTLEMASTER:
+            return Vanilla::UNIT_NPC_FLAG_BATTLEMASTER;
+        case Classic::UNIT_NPC_FLAG_AUCTIONEER:
+            return Vanilla::UNIT_NPC_FLAG_AUCTIONEER;
+        case Classic::UNIT_NPC_FLAG_STABLEMASTER:
+            return Vanilla::UNIT_NPC_FLAG_STABLEMASTER;
+    }
+    return 0;
+}
+
 
 inline std::string GetNpcFlagName(uint32 flag)
 {
     switch (flag)
     {
-        case UNIT_NPC_FLAG_GOSSIP:
+        case Classic::UNIT_NPC_FLAG_GOSSIP:
             return "UNIT_NPC_FLAG_GOSSIP";
-        case UNIT_NPC_FLAG_QUESTGIVER:
+        case Classic::UNIT_NPC_FLAG_QUESTGIVER:
             return "UNIT_NPC_FLAG_QUESTGIVER";
-        case UNIT_NPC_FLAG_UNK1:
+        case Classic::UNIT_NPC_FLAG_UNK1:
             return "UNIT_NPC_FLAG_UNK1";
-        case UNIT_NPC_FLAG_UNK2:
+        case Classic::UNIT_NPC_FLAG_UNK2:
             return "UNIT_NPC_FLAG_UNK2";
-        case UNIT_NPC_FLAG_TRAINER:
+        case Classic::UNIT_NPC_FLAG_TRAINER:
             return "UNIT_NPC_FLAG_TRAINER";
-        case UNIT_NPC_FLAG_TRAINER_CLASS:
+        case Classic::UNIT_NPC_FLAG_TRAINER_CLASS:
             return "UNIT_NPC_FLAG_TRAINER_CLASS";
-        case UNIT_NPC_FLAG_TRAINER_PROFESSION:
+        case Classic::UNIT_NPC_FLAG_TRAINER_PROFESSION:
             return "UNIT_NPC_FLAG_TRAINER_PROFESSION";
-        case UNIT_NPC_FLAG_VENDOR:
+        case Classic::UNIT_NPC_FLAG_VENDOR:
             return "UNIT_NPC_FLAG_VENDOR";
-        case UNIT_NPC_FLAG_VENDOR_AMMO:
+        case Classic::UNIT_NPC_FLAG_VENDOR_AMMO:
             return "UNIT_NPC_FLAG_VENDOR_AMMO";
-        case UNIT_NPC_FLAG_VENDOR_FOOD:
+        case Classic::UNIT_NPC_FLAG_VENDOR_FOOD:
             return "UNIT_NPC_FLAG_VENDOR_FOOD";
-        case UNIT_NPC_FLAG_VENDOR_POISON:
+        case Classic::UNIT_NPC_FLAG_VENDOR_POISON:
             return "UNIT_NPC_FLAG_VENDOR_POISON";
-        case UNIT_NPC_FLAG_VENDOR_REAGENT:
+        case Classic::UNIT_NPC_FLAG_VENDOR_REAGENT:
             return "UNIT_NPC_FLAG_VENDOR_REAGENT";
-        case UNIT_NPC_FLAG_REPAIR:
+        case Classic::UNIT_NPC_FLAG_REPAIR:
             return "UNIT_NPC_FLAG_REPAIR";
-        case UNIT_NPC_FLAG_FLIGHTMASTER:
+        case Classic::UNIT_NPC_FLAG_FLIGHTMASTER:
             return "UNIT_NPC_FLAG_FLIGHTMASTER";
-        case UNIT_NPC_FLAG_SPIRITHEALER:
+        case Classic::UNIT_NPC_FLAG_SPIRITHEALER:
             return "UNIT_NPC_FLAG_SPIRITHEALER";
-        case UNIT_NPC_FLAG_SPIRITGUIDE:
+        case Classic::UNIT_NPC_FLAG_SPIRITGUIDE:
             return "UNIT_NPC_FLAG_SPIRITGUIDE";
-        case UNIT_NPC_FLAG_INNKEEPER:
+        case Classic::UNIT_NPC_FLAG_INNKEEPER:
             return "UNIT_NPC_FLAG_INNKEEPER";
-        case UNIT_NPC_FLAG_BANKER:
+        case Classic::UNIT_NPC_FLAG_BANKER:
             return "UNIT_NPC_FLAG_BANKER";
-        case UNIT_NPC_FLAG_PETITIONER:
+        case Classic::UNIT_NPC_FLAG_PETITIONER:
             return "UNIT_NPC_FLAG_PETITIONER";
-        case UNIT_NPC_FLAG_TABARDDESIGNER:
+        case Classic::UNIT_NPC_FLAG_TABARDDESIGNER:
             return "UNIT_NPC_FLAG_TABARDDESIGNER";
-        case UNIT_NPC_FLAG_BATTLEMASTER:
+        case Classic::UNIT_NPC_FLAG_BATTLEMASTER:
             return "UNIT_NPC_FLAG_BATTLEMASTER";
-        case UNIT_NPC_FLAG_AUCTIONEER:
+        case Classic::UNIT_NPC_FLAG_AUCTIONEER:
             return "UNIT_NPC_FLAG_AUCTIONEER";
-        case UNIT_NPC_FLAG_STABLEMASTER:
+        case Classic::UNIT_NPC_FLAG_STABLEMASTER:
             return "UNIT_NPC_FLAG_STABLEMASTER";
-        case UNIT_NPC_FLAG_GUILD_BANKER:
+        case Classic::UNIT_NPC_FLAG_GUILD_BANKER:
             return "UNIT_NPC_FLAG_GUILD_BANKER";
-        case UNIT_NPC_FLAG_SPELLCLICK:
+        case Classic::UNIT_NPC_FLAG_SPELLCLICK:
             return "UNIT_NPC_FLAG_SPELLCLICK";
-        case UNIT_NPC_FLAG_PLAYER_VEHICLE:
+        case Classic::UNIT_NPC_FLAG_PLAYER_VEHICLE:
             return "UNIT_NPC_FLAG_PLAYER_VEHICLE";
-        case UNIT_NPC_FLAG_MAILBOX:
+        case Classic::UNIT_NPC_FLAG_MAILBOX:
             return "UNIT_NPC_FLAG_MAILBOX";
-        case UNIT_NPC_FLAG_ARTIFACT_POWER_RESPEC:
+        case Classic::UNIT_NPC_FLAG_ARTIFACT_POWER_RESPEC:
             return "UNIT_NPC_FLAG_ARTIFACT_POWER_RESPEC";
-        case UNIT_NPC_FLAG_TRANSMOGRIFIER:
+        case Classic::UNIT_NPC_FLAG_TRANSMOGRIFIER:
             return "UNIT_NPC_FLAG_TRANSMOGRIFIER";
-        case UNIT_NPC_FLAG_VAULTKEEPER:
+        case Classic::UNIT_NPC_FLAG_VAULTKEEPER:
             return "UNIT_NPC_FLAG_VAULTKEEPER";
-        case UNIT_NPC_FLAG_WILD_BATTLE_PET:
+        case Classic::UNIT_NPC_FLAG_WILD_BATTLE_PET:
             return "UNIT_NPC_FLAG_WILD_BATTLE_PET";
-        case UNIT_NPC_FLAG_BLACK_MARKET:
+        case Classic::UNIT_NPC_FLAG_BLACK_MARKET:
             return "UNIT_NPC_FLAG_BLACK_MARKET";
     }
     return "UNKNOWN";
@@ -402,7 +474,7 @@ inline std::string GetNpcFlagName(uint32 flag)
 inline std::string GetNpcFlagNames(uint32 flags)
 {
     std::string flagNames;
-    for (uint32 i = 0; i < MAX_NPC_FLAGS; i++)
+    for (uint32 i = 0; i < Classic::MAX_NPC_FLAGS; i++)
     {
         uint32 flag = pow(2, i);
         if (flags & flag)
@@ -451,6 +523,22 @@ enum UnitFlags : uint32
     UNIT_FLAG_UNK_31                = 0x80000000,
     MAX_UNIT_FLAGS = 32
 };
+
+// If the flag should be changed in script commands.
+inline bool IsScriptRelevantUnitFlag(uint32 flag)
+{
+    switch (flag)
+    {
+        case UNIT_FLAG_NON_ATTACKABLE:
+        case UNIT_FLAG_NOT_ATTACKABLE_1:
+        case UNIT_FLAG_IMMUNE_TO_PC:
+        case UNIT_FLAG_IMMUNE_TO_NPC:
+        case UNIT_FLAG_PVP:
+        case UNIT_FLAG_NOT_SELECTABLE:
+            return true;
+    }
+    return false;
+}
 
 inline std::string GetUnitFlagName(uint32 flag)
 {
@@ -624,5 +712,132 @@ inline std::string GetGameObjectStateName(uint32 state)
     }
     return "UNKNOWN";
 }
+
+enum ChatMessageType
+{
+    SNIFF_CHAT_TYPE_SYSTEM               = 0,
+    SNIFF_CHAT_TYPE_SAY                  = 1,
+    SNIFF_CHAT_TYPE_PARTY                = 2,
+    SNIFF_CHAT_TYPE_RAID                 = 3,
+    SNIFF_CHAT_TYPE_GUILD                = 4,
+    SNIFF_CHAT_TYPE_OFFICER              = 5,
+    SNIFF_CHAT_TYPE_YELL                 = 6,
+    SNIFF_CHAT_TYPE_WHISPER              = 7,
+    SNIFF_CHAT_TYPE_WHISPERFOREIGN       = 8,
+    SNIFF_CHAT_TYPE_WHISPERINFORM        = 9,
+    SNIFF_CHAT_TYPE_EMOTE                = 10,
+    SNIFF_CHAT_TYPE_TEXTEMOTE            = 11,
+    SNIFF_CHAT_TYPE_MONSTERSAY           = 12,
+    SNIFF_CHAT_TYPE_MONSTERPARTY         = 13,
+    SNIFF_CHAT_TYPE_MONSTERYELL          = 14,
+    SNIFF_CHAT_TYPE_MONSTERWHISPER       = 15,
+    SNIFF_CHAT_TYPE_MONSTEREMOTE         = 16,
+    SNIFF_CHAT_TYPE_CHANNEL              = 17,
+    SNIFF_CHAT_TYPE_CHANNELJOIN          = 18,
+    SNIFF_CHAT_TYPE_CHANNELLEAVE         = 19,
+    SNIFF_CHAT_TYPE_CHANNELLIST          = 20,
+    SNIFF_CHAT_TYPE_CHANNELNOTICE        = 21,
+    SNIFF_CHAT_TYPE_CHANNELNOTICEUSER    = 22,
+    SNIFF_CHAT_TYPE_AFK                  = 23,
+    SNIFF_CHAT_TYPE_DND                  = 24,
+    SNIFF_CHAT_TYPE_IGNORED              = 25,
+    SNIFF_CHAT_TYPE_SKILL                = 26,
+    SNIFF_CHAT_TYPE_LOOT                 = 27,
+    SNIFF_CHAT_TYPE_MONEY                = 28,
+    SNIFF_CHAT_TYPE_OPENING              = 29,
+    SNIFF_CHAT_TYPE_TRADESKILLS          = 30,
+    SNIFF_CHAT_TYPE_PETINFO              = 31,
+    SNIFF_CHAT_TYPE_COMBATMISCINFO       = 32,
+    SNIFF_CHAT_TYPE_COMBATXPGAIN         = 33,
+    SNIFF_CHAT_TYPE_COMBATHONORGAIN      = 34,
+    SNIFF_CHAT_TYPE_COMBATFACTIONCHANGE  = 35,
+    SNIFF_CHAT_TYPE_BATTLEGROUNDNEUTRAL  = 36,
+    SNIFF_CHAT_TYPE_BATTLEGROUNDALLIANCE = 37,
+    SNIFF_CHAT_TYPE_BATTLEGROUNDHORDE    = 38,
+    SNIFF_CHAT_TYPE_RAIDLEADER           = 39,
+    SNIFF_CHAT_TYPE_RAIDWARNING          = 40,
+    SNIFF_CHAT_TYPE_RAIDBOSSEMOTE        = 41,
+    SNIFF_CHAT_TYPE_RAIDBOSSWHISPER      = 42,
+    SNIFF_CHAT_TYPE_FILTERED             = 43,
+    SNIFF_CHAT_TYPE_BATTLEGROUND         = 44,
+    SNIFF_CHAT_TYPE_BATTLEGROUNDLEADER   = 45,
+    SNIFF_CHAT_TYPE_RESTRICTED           = 46,
+    SNIFF_CHAT_TYPE_BATTLENET            = 47,
+    SNIFF_CHAT_TYPE_ACHIEVEMENT          = 48,
+    SNIFF_CHAT_TYPE_GUILDACHIEVEMENT     = 49,
+    SNIFF_CHAT_TYPE_ARENAPOINTS          = 50,
+    SNIFF_CHAT_TYPE_PARTYLEADER          = 51,
+    SNIFF_CHAT_TYPE_ADDON                = UINT_MAX
+};
+
+enum ChatType
+{
+    CHAT_TYPE_SAY               = 0,
+    CHAT_TYPE_YELL              = 1,
+    CHAT_TYPE_TEXT_EMOTE        = 2,
+    CHAT_TYPE_BOSS_EMOTE        = 3,
+    CHAT_TYPE_WHISPER           = 4,
+    CHAT_TYPE_BOSS_WHISPER      = 5,
+    CHAT_TYPE_ZONE_YELL         = 6
+};
+
+inline std::string GetGetChatTypeName(uint32 chatType)
+{
+    switch (chatType)
+    {
+        case CHAT_TYPE_SAY:
+            return "Say";
+        case CHAT_TYPE_YELL:
+            return "Yell";
+        case CHAT_TYPE_TEXT_EMOTE:
+            return "Text Emote";
+        case CHAT_TYPE_BOSS_EMOTE:
+            return "Boss Emote";
+        case CHAT_TYPE_WHISPER:
+            return "Whisper";
+        case CHAT_TYPE_BOSS_WHISPER:
+            return "Boss Whisper";
+        case CHAT_TYPE_ZONE_YELL:
+            return "Zone Yell";
+    }
+    return "UNKNOWN";
+}
+
+inline uint32 ConvertChatTypeToVmangosFormat(uint32 chatType)
+{
+    switch (chatType)
+    {
+        case SNIFF_CHAT_TYPE_MONSTERSAY:
+            return CHAT_TYPE_SAY;
+        case SNIFF_CHAT_TYPE_MONSTERYELL:
+            return CHAT_TYPE_YELL;
+        case SNIFF_CHAT_TYPE_MONSTEREMOTE:
+            return CHAT_TYPE_TEXT_EMOTE;
+        case SNIFF_CHAT_TYPE_MONSTERWHISPER:
+            return CHAT_TYPE_WHISPER;
+    }
+    return 0;
+}
+
+enum UpdateFields5875
+{
+    FIELD_GAMEOBJECT_FLAGS           = 9,
+    FIELD_GAMEOBJECT_DYN_FLAGS       = 19,
+    FIELD_ITEM_FIELD_FLAGS           = 21,
+    FIELD_CORPSE_FIELD_FLAGS         = 35,
+    FIELD_CORPSE_FIELD_DYNAMIC_FLAGS = 36,
+    FIELD_UNIT_FIELD_FLAGS           = 46,
+    FIELD_UNIT_DYNAMIC_FLAGS         = 143,
+    FIELD_UNIT_NPC_FLAGS             = 147,
+    FIELD_UNIT_FIELD_RESISTANCES     = 155,
+    FIELD_UNIT_FIELD_RESISTANCES_01  = 156,
+    FIELD_UNIT_FIELD_RESISTANCES_02  = 157,
+    FIELD_UNIT_FIELD_RESISTANCES_03  = 158,
+    FIELD_UNIT_FIELD_RESISTANCES_04  = 159,
+    FIELD_UNIT_FIELD_RESISTANCES_05  = 160,
+    FIELD_UNIT_FIELD_RESISTANCES_06  = 161,
+    FIELD_UNIT_FIELD_ATTACK_POWER    = 165,
+    FIELD_PLAYER_FLAGS               = 190,
+};
 
 #endif

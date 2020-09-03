@@ -1,10 +1,14 @@
 #include <map>
+#include <unordered_map>
 #include <set>
+#include <string>
 #include <iostream>
 #include <fstream>
 #include "Defines\SniffedEvents.h"
 #include "Defines\SniffDatabase.h"
 #include "Defines\TimelineMaker.h"
+#include "Defines\ScriptCommands.h"
+#include "Defines\Helpers.h"
 #include "Database\Database.h"
 
 extern Database GameDb;
@@ -416,6 +420,7 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
     
 
     // GameObjects
+
     if (showGameObjects)
     {
         {
@@ -465,7 +470,6 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
         }
     }
     
-
     // Sounds and Music
 
     if (showSounds)
@@ -480,6 +484,20 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
         SniffDatabase::LoadPlaySound(whereClause);
+    }
+}
+
+void TimelineMaker::PromptTimelineSaveMethod(time_t startTime)
+{
+    printf("Total events: %u\n", TimelineMaker::m_eventsMap.size());
+    if (TimelineMaker::m_eventsMap.size())
+    {
+        printf("Do you want to save timeline to file? (y/n)\n> ");
+        if (GetChar() == 'y')
+            TimelineMaker::PrintTimelineToFile(startTime);
+        printf("Do you want to show timeline on screen? (y/n)\n> ");
+        if (GetChar() == 'y')
+            TimelineMaker::PrintTimelineToScreen(startTime);
     }
 }
 
@@ -524,6 +542,8 @@ void TimelineMaker::PrintTimelineToFile(time_t startTime)
         log << itr.second->ToString(false);
         lastEventTime = itr.first;
     }
+
+    printf("Timeline has been saved to file.\n");
 
     log.close();
 }
@@ -1036,4 +1056,594 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
     }
 
     return !questCompleteEvents.empty() || !questAcceptEvents.empty();
+}
+
+#define UNKNOWN_TEXTS_START 200000
+#define GENERIC_SCRIPTS_START 300000
+
+void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
+{
+    CreateTimelineForAll(uiStartTime, uiEndTime, true, true, true, true, true, true, true, true, true, true, true, true, true, true);
+    if (m_eventsMap.empty())
+    {
+        printf("No events found in time period.\n");
+        return;
+    }
+
+    std::multimap<time_t, std::pair<std::shared_ptr<SniffedEvent>, std::vector<ScriptInfo>>> scriptEventsMap;
+
+    time_t lastEventTime = uiStartTime;
+    for (const auto& itr : m_eventsMap)
+    {
+        time_t timeDiff = itr.first - lastEventTime;
+        printf("\n\n----------------------\n");
+        printf("%u SECONDS LATER\n", (uint32)timeDiff);
+        printf("----------------------\n\n");
+        printf("%s", itr.second->ToString(false).c_str());
+        lastEventTime = itr.first;
+
+        std::vector<ScriptInfo> vScriptActions;
+        GetScriptInfoFromSniffedEvent(itr.first, itr.second, vScriptActions);
+        if (vScriptActions.empty())
+            printf("\n\nCannot generate script for this event. Press any key.\n> ");
+        else
+            printf("\n\nDo you want to include this event in the script? (y/n)\n> ");
+
+        if ((GetChar() == 'y') && !vScriptActions.empty())
+            scriptEventsMap.insert(std::make_pair(itr.first, std::make_pair(itr.second, vScriptActions)));
+    }
+
+    m_eventsMap.clear();
+
+    std::vector<KnownObject> actorsList;
+    for (const auto& itr : scriptEventsMap)
+    {
+        KnownObject actor = itr.second.first.get()->GetSourceObject();
+        if (std::find(actorsList.begin(), actorsList.end(), actor) == actorsList.end())
+            actorsList.push_back(actor);
+    }
+    printf("List of actors:\n");
+    printf("0. None\n");
+    for (uint32 i = 0; i < actorsList.size(); i++)
+    {
+        KnownObject const& actor = actorsList[i];
+        printf("%u. %s\n", i + 1, FormatObjectName(actor).c_str());
+    }
+    printf("Main actor: ");
+    uint32 actorId = GetUInt32();
+    KnownObject mainActor;
+    if (actorId)
+        mainActor = actorsList[actorId - 1];
+
+    std::ofstream log("script.sql");
+    if (!log.is_open())
+        return;
+
+    printf("Main script id: ");
+    uint32 mainScriptId = GetUInt32();
+
+    printf("Main table name: ");
+    std::string mainTableName = GetString("generic_scripts");
+
+    if (!m_unknownScriptTexts.empty() || !actorsList.empty())
+    {
+        log << "/*\n";
+        if (!actorsList.empty())
+        {
+            log << "Objects involved in the script:\n";
+            for (uint32 i = 0; i < actorsList.size(); i++)
+            {
+                KnownObject const& actor = actorsList[i];
+                log << i + 1 << ". " << FormatObjectName(actor) << "\n";
+            }
+            log << "\n";
+        }
+        
+        if (!m_unknownScriptTexts.empty())
+        {
+            log << "The following texts need to have their broadcast id fixed:\n";
+            for (uint32 i = 0; i < m_unknownScriptTexts.size(); i++)
+            {
+                log << UNKNOWN_TEXTS_START + 1 + i << " - " << m_unknownScriptTexts[i] << "\n";
+            }
+            log << "\n";
+        }
+        
+        log << "*/\n\n";
+    }
+
+    std::map<KnownObject, uint32> scriptIdsForObjects;
+
+    // Find which commands need to target another object, yet their source is also different from the main actor.
+    // They need to be part of a separate generic script, so add those actors to the map above.
+    for (auto& itr : scriptEventsMap)
+    {
+        KnownObject source = itr.second.first.get()->GetSourceObject();
+        KnownObject target = itr.second.first.get()->GetTargetObject();
+        if (target.IsEmpty())
+            continue;
+
+        for (auto& script : itr.second.second)
+        {
+            if (source == target)
+                script.raw.data[4] = SF_GENERAL_TARGET_SELF;
+            else if (target.m_type == "Creature")
+            {
+                script.target_type = TARGET_T_CREATURE_WITH_ENTRY;
+                script.target_param1 = target.m_entry;
+                script.target_param2 = 30;
+
+                if (mainActor != source)
+                {
+                    if (scriptIdsForObjects.find(source) == scriptIdsForObjects.end())
+                        scriptIdsForObjects[source] = scriptIdsForObjects.size() + 1;
+                }
+            }
+            else if (target.m_type == "GameObject")
+            {
+                script.target_type = TARGET_T_GAMEOBJECT_WITH_ENTRY;
+                script.target_param1 = target.m_entry;
+                script.target_param2 = 30;
+
+                if (mainActor != source)
+                {
+                    if (scriptIdsForObjects.find(source) == scriptIdsForObjects.end())
+                        scriptIdsForObjects[source] = scriptIdsForObjects.size() + 1;
+                }
+            }
+        }
+    }
+    
+    for (auto& itr : scriptEventsMap)
+    {
+        KnownObject source = itr.second.first.get()->GetSourceObject();
+
+        for (auto& script : itr.second.second)
+        {
+            // Assign script id for commands with source present in the map above.
+            auto scriptIdItr = scriptIdsForObjects.find(source);
+            if (scriptIdItr != scriptIdsForObjects.end())
+            {
+                script.id = scriptIdItr->second;
+            }
+            // Command does not require separate script id.
+            else
+            {
+                script.id = mainScriptId;
+                // Swap targets so that the correct source executes the command.
+                if (mainActor != source && 
+                    script.command != SCRIPT_COMMAND_TEMP_SUMMON_CREATURE &&
+                    script.command != SCRIPT_COMMAND_SUMMON_OBJECT)
+                {
+                    if (source.m_type == "Creature")
+                    {
+                        script.target_type = TARGET_T_CREATURE_WITH_ENTRY;
+                        script.target_param1 = source.m_entry;
+                        script.target_param2 = 30;
+                        script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
+                    }
+                    else if (source.m_type == "GameObject")
+                    {
+                        script.target_type = TARGET_T_GAMEOBJECT_WITH_ENTRY;
+                        script.target_param1 = source.m_entry;
+                        script.target_param2 = 30;
+                        script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
+                    }
+                }
+            }
+        }
+    }
+
+    // Assign delay for all the scripts.
+    for (auto& itr : scriptEventsMap)
+    {
+        KnownObject source = itr.second.first.get()->GetSourceObject();
+        uint32 timeDiff = itr.first - uiStartTime;
+        for (auto& script : itr.second.second)
+        {
+            script.delay = timeDiff;
+
+            if (!source.IsEmpty())
+            {
+                script.comment = EscapeString(GetObjectName(source) + " - " + script.comment);
+            }
+        }
+    }
+
+    // Save all the separate scripts first.
+    for (const auto& genericScriptItr : scriptIdsForObjects)
+    {
+        uint32 count = 0;
+        log << "-- Script for " << FormatObjectName(genericScriptItr.first) << "\n";
+        log << "DELETE FROM `generic_scripts` WHERE `id`=" << (GENERIC_SCRIPTS_START + genericScriptItr.second) << ";\n";
+        log << "INSERT INTO `generic_scripts` (`id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id`, `comments`) VALUES\n";
+        for (const auto& itr : scriptEventsMap)
+        {
+            KnownObject source = itr.second.first.get()->GetSourceObject();
+            if (source != genericScriptItr.first)
+                continue;
+
+            for (auto& script : itr.second.second)
+            {
+                // Don't include the spawn in the separate script.
+                if (script.command == SCRIPT_COMMAND_TEMP_SUMMON_CREATURE ||
+                    script.command == SCRIPT_COMMAND_SUMMON_OBJECT)
+                    break;
+
+                if (count > 0)
+                    log << ",\n";
+                log << "(" << (GENERIC_SCRIPTS_START + script.id) << ", " << script.delay << ", " << script.command << ", "
+                    << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << script.raw.data[3] << ", " 
+                    << script.target_param1 << ", " << script.target_param2 << ", " << script.target_type << ", "
+                    << script.raw.data[4] << ", " << script.raw.data[5] << ", " << script.raw.data[6] << ", " << script.raw.data[7] << ", " 
+                    << script.raw.data[8] << ", "<< script.x << ", " << script.y << ", " << script.z << ", " << script.o << ", "
+                    << script.condition << ", '" << script.comment << "')";
+
+                count++;
+            }
+        }
+        log << ";\n\n";
+    }
+
+    // Check if any of the commands that require a separate script are by a creature
+    // which is summoned in the main script, and assign the script id there in this case.
+    for (auto& itr : scriptEventsMap)
+    {
+        KnownObject source = itr.second.first.get()->GetSourceObject();
+        auto scriptIdItr = scriptIdsForObjects.find(source);
+        if (scriptIdItr == scriptIdsForObjects.end())
+            continue;
+
+        for (auto& script : itr.second.second)
+        {
+            if (script.command == SCRIPT_COMMAND_TEMP_SUMMON_CREATURE)
+            {
+                script.summonCreature.scriptId = GENERIC_SCRIPTS_START + scriptIdItr->second;
+                scriptIdsForObjects.erase(scriptIdItr);
+                break;
+            }
+        }
+    }
+
+    // Now export the main script.
+    {
+        uint32 count = 0;
+        log << "-- Main script.\n";
+        log << "DELETE FROM `" << mainTableName << "` WHERE `id`=" << mainScriptId << ";\n";
+        log << "INSERT INTO `" << mainTableName << "` (`id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id`, `comments`) VALUES\n";
+        // Add START_SCRIPT commands for objects that have separate scripts.
+        for (const auto& genericScriptItr : scriptIdsForObjects)
+        {
+            if (count > 0)
+                log << ",\n";
+
+            ScriptInfo script;
+            script.id = mainScriptId;
+            script.command = SCRIPT_COMMAND_START_SCRIPT;
+            script.startScript.scriptId[0] = GENERIC_SCRIPTS_START + genericScriptItr.second;
+            script.startScript.chance[0] = 100;
+            script.comment = "Start Script for " + EscapeString(GetObjectName(genericScriptItr.first));
+            if (genericScriptItr.first.m_type == "Creature")
+            {
+                script.target_type = TARGET_T_CREATURE_WITH_ENTRY;
+                script.target_param1 = genericScriptItr.first.m_entry;
+                script.target_param2 = 30;
+                script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
+            }
+            else if (genericScriptItr.first.m_type == "GameObject")
+            {
+                script.target_type = TARGET_T_GAMEOBJECT_WITH_ENTRY;
+                script.target_param1 = genericScriptItr.first.m_entry;
+                script.target_param2 = 30;
+                script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
+            }
+
+            log << "(" << script.id << ", " << script.delay << ", " << script.command << ", "
+                << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << script.raw.data[3] << ", "
+                << script.target_param1 << ", " << script.target_param2 << ", " << script.target_type << ", "
+                << script.raw.data[4] << ", " << script.raw.data[5] << ", " << script.raw.data[6] << ", " << script.raw.data[7] << ", "
+                << script.raw.data[8] << ", " << script.x << ", " << script.y << ", " << script.z << ", " << script.o << ", "
+                << script.condition << ", '" << script.comment << "')";
+
+            count++;
+        }
+        // Actually export the main script now.
+        for (const auto& itr : scriptEventsMap)
+        {
+            KnownObject source = itr.second.first.get()->GetSourceObject();
+            auto scriptIdItr = scriptIdsForObjects.find(source);
+
+            for (const auto& script : itr.second.second)
+            {
+                // Skip objects that have a separate script.
+                if (scriptIdItr != scriptIdsForObjects.end() &&
+                    // Include the spawn command in the main script,
+                    // even if this object has its own separate script.
+                    script.command != SCRIPT_COMMAND_TEMP_SUMMON_CREATURE &&
+                    script.command != SCRIPT_COMMAND_SUMMON_OBJECT)
+                    break;
+
+                if (count > 0)
+                    log << ",\n";
+                log << "(" << script.id << ", " << script.delay << ", " << script.command << ", "
+                    << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << script.raw.data[3] << ", "
+                    << script.target_param1 << ", " << script.target_param2 << ", " << script.target_type << ", "
+                    << script.raw.data[4] << ", " << script.raw.data[5] << ", " << script.raw.data[6] << ", " << script.raw.data[7] << ", "
+                    << script.raw.data[8] << ", " << script.x << ", " << script.y << ", " << script.z << ", " << script.o << ", "
+                    << script.condition << ", '" << script.comment << "')";
+
+                count++;
+            }
+        }
+        log << ";\n\n";
+    }
+
+    printf("Script has been saved to file.\n");
+
+    log.close();
+}
+
+std::vector<std::string> TimelineMaker::m_unknownScriptTexts;
+
+uint32 TimelineMaker::GetTemporaryIdForUnknownBroadcastText(std::string text)
+{
+    auto itr = std::find(m_unknownScriptTexts.begin(), m_unknownScriptTexts.end(), text);
+    if (itr == m_unknownScriptTexts.end())
+    {
+        m_unknownScriptTexts.push_back(text);
+        return UNKNOWN_TEXTS_START + m_unknownScriptTexts.size();
+    }
+
+    return UNKNOWN_TEXTS_START + std::distance(m_unknownScriptTexts.begin(), itr);
+}
+
+void TimelineMaker::GetScriptInfoFromSniffedEvent(time_t unixtime, std::shared_ptr<SniffedEvent> sniffedEvent, std::vector<ScriptInfo>& scriptActions)
+{
+    if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureCreate2>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_TEMP_SUMMON_CREATURE;
+        script.summonCreature.attackTarget = TARGET_T_OWNER_OR_SELF;
+        script.summonCreature.despawnType = TEMPSUMMON_TIMED_OR_DEAD_DESPAWN;
+        script.summonCreature.despawnDelay = 60000;
+        script.summonCreature.creatureEntry = ptr->m_entry;
+        script.x = ptr->m_x;
+        script.y = ptr->m_y;
+        script.z = ptr->m_z;
+        script.o = ptr->m_o;
+        script.comment = "Summon Creature " + WorldDatabase::GetCreatureName(ptr->m_entry);
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureDestroy>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_DESPAWN_CREATURE;
+        script.comment = "Despawn Creature";
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureText>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_TALK;
+        uint32 textId = WorldDatabase::GetBroadcastTextId(ptr->m_text);
+        if (!textId)
+            textId = GetTemporaryIdForUnknownBroadcastText(ptr->m_text);
+        script.talk.textId[0] = textId;
+        script.comment = "Say Text";
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureEmote>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_EMOTE;
+        script.emote.emoteId[0] = ptr->m_emoteId;
+        script.comment = "Emote " + ptr->m_emoteName;
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureAttackStart>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_ATTACK_START;
+        script.comment = "Attack Start";
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureMovement>(sniffedEvent))
+    {
+        ScriptInfo script;
+        if (ptr->m_endX == 0 && ptr->m_endY == 0 && ptr->m_endX == 0)
+        {
+            script.command = SCRIPT_COMMAND_TURN_TO;
+            script.turnTo.facingLogic = SO_TURNTO_PROVIDED_ORIENTATION;
+            script.comment = "Set Orientation";
+        }
+        else
+        {
+            script.command = SCRIPT_COMMAND_MOVE_TO;
+            script.moveTo.flags = SF_MOVETO_POINT_MOVEGEN;
+            script.moveTo.travelTime = ptr->m_moveTime;
+            script.x = ptr->m_endX;
+            script.y = ptr->m_endY;
+            script.z = ptr->m_endZ;
+            script.comment = "Move";
+        }
+        script.o = ptr->m_orientation;
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_entry>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_UPDATE_ENTRY;
+        script.updateEntry.creatureEntry = ptr->m_value;
+        script.comment = "Update Entry to " + WorldDatabase::GetCreatureName(ptr->m_value);
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_display_id>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_MORPH_TO_ENTRY_OR_MODEL;
+        script.morph.creatureOrModelEntry = ptr->m_value;
+        script.morph.isDisplayId = 1;
+        script.comment = "Morph to " + std::to_string(ptr->m_value);
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_faction>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_SET_FACTION;
+        script.faction.factionId = ptr->m_value;
+        script.faction.flags = TEMPFACTION_RESTORE_RESPAWN;
+        script.comment = "Set Faction to " + WorldDatabase::GetFactionName(ptr->m_value);
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_emote_state>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_EMOTE;
+        script.emote.emoteId[0] = ptr->m_value;
+        script.comment = "Emote State";
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_stand_state>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_STAND_STATE;
+        script.standState.standState = ptr->m_value;
+        script.comment = "Set Stand State";
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_npc_flags>(sniffedEvent))
+    {
+        uint32 oldFlags = SniffDatabase::GetCreatureFieldValueBeforeTime(ptr->m_guid, unixtime, "npc_flags");
+        uint32 removedFlags = 0;
+        uint32 addedFlags = 0;
+        for (uint32 i = 0; i < 32; i++)
+        {
+            uint32 flag = pow(2, i);
+            if ((oldFlags & flag) && !(ptr->m_value & flag))
+            {
+                removedFlags |= ConvertClassicNpcFlagToVanilla(flag);
+            }
+            else if (!(oldFlags & flag) && (ptr->m_value & flag))
+            {
+                addedFlags |= ConvertClassicNpcFlagToVanilla(flag);
+            }
+        }
+
+        if (addedFlags)
+        {
+            ScriptInfo script;
+            script.command = SCRIPT_COMMAND_MODIFY_FLAGS;
+            script.modFlags.fieldId = FIELD_UNIT_NPC_FLAGS;
+            script.modFlags.fieldValue = addedFlags;
+            script.modFlags.mode = SO_MODIFYFLAGS_SET;
+            script.comment = "Add Npc Flags";
+            scriptActions.push_back(script);
+        }
+
+        if (removedFlags)
+        {
+            ScriptInfo script;
+            script.command = SCRIPT_COMMAND_MODIFY_FLAGS;
+            script.modFlags.fieldId = FIELD_UNIT_NPC_FLAGS;
+            script.modFlags.fieldValue = removedFlags;
+            script.modFlags.mode = SO_MODIFYFLAGS_REMOVE;
+            script.comment = "Remove Npc Flags";
+            scriptActions.push_back(script);
+        }
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_unit_flags>(sniffedEvent))
+    {
+        uint32 oldFlags = SniffDatabase::GetCreatureFieldValueBeforeTime(ptr->m_guid, unixtime, "unit_flags");
+        uint32 removedFlags = 0;
+        uint32 addedFlags = 0;
+        for (uint32 i = 0; i < 32; i++)
+        {
+            uint32 flag = pow(2, i);
+            if ((oldFlags & flag) && !(ptr->m_value & flag))
+            {
+                if (IsScriptRelevantUnitFlag(flag))
+                    removedFlags |= flag;
+            }
+            else if (!(oldFlags & flag) && (ptr->m_value & flag))
+            {
+                if (IsScriptRelevantUnitFlag(flag))
+                    addedFlags |= flag;
+            }
+        }
+
+        if (addedFlags)
+        {
+            ScriptInfo script;
+            script.command = SCRIPT_COMMAND_MODIFY_FLAGS;
+            script.modFlags.fieldId = FIELD_UNIT_FIELD_FLAGS;
+            script.modFlags.fieldValue = addedFlags;
+            script.modFlags.mode = SO_MODIFYFLAGS_SET;
+            script.comment = "Add Unit Flags";
+            scriptActions.push_back(script);
+        }
+
+        if (removedFlags)
+        {
+            ScriptInfo script;
+            script.command = SCRIPT_COMMAND_MODIFY_FLAGS;
+            script.modFlags.fieldId = FIELD_UNIT_FIELD_FLAGS;
+            script.modFlags.fieldValue = removedFlags;
+            script.modFlags.mode = SO_MODIFYFLAGS_REMOVE;
+            script.comment = "Remove Unit Flags";
+            scriptActions.push_back(script);
+        }
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_GameObjectCreate2>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_SUMMON_OBJECT;
+        script.summonObject.gameobject_entry = ptr->m_entry;
+        script.summonObject.respawn_time = 60000;
+        script.x = ptr->m_x;
+        script.y = ptr->m_y;
+        script.z = ptr->m_z;
+        script.o = ptr->m_o;
+        script.comment = "Summon GameObject " + WorldDatabase::GetGameObjectName(ptr->m_entry);
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_GameObjectDestroy>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_REMOVE_OBJECT;
+        script.raw.data[4] = SF_GENERAL_TARGET_SELF; // this command takes target first
+        script.comment = "Despawn GameObject";
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_GameObjectUpdate_state>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_SET_GO_STATE;
+        script.setGoState.state = ptr->m_value;
+        script.comment = "Set Go State to " + GetGameObjectStateName(ptr->m_value);
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_PlaySound>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_PLAY_SOUND;
+        script.playSound.soundId = ptr->m_sound;
+        script.comment = "Play Sound " + WorldDatabase::GetSoundName(ptr->m_sound);
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_SpellCastStart>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_CAST_SPELL;
+        script.castSpell.spellId = ptr->m_spellId;
+        script.comment = "Cast Spell " + WorldDatabase::GetSpellName(ptr->m_spellId);
+        scriptActions.push_back(script);
+    }
+    else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_SpellCastGo>(sniffedEvent))
+    {
+        ScriptInfo script;
+        script.command = SCRIPT_COMMAND_CAST_SPELL;
+        script.castSpell.spellId = ptr->m_spellId;
+        script.comment = "Cast Spell " + WorldDatabase::GetSpellName(ptr->m_spellId);
+        scriptActions.push_back(script);
+    }
 }

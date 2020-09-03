@@ -17,6 +17,7 @@
     <ClCompile Include="WorldDatabase.cpp" />
     <ClCompile Include="SniffDatabase.cpp" />
     <ClCompile Include="TimelineMaker.cpp" />
+    <ClCompile Include="Helpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Database\Database.h">
@@ -50,6 +51,12 @@
       <Filter>Defines</Filter>
     </ClInclude>
     <ClInclude Include="Defines\TimelineMaker.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="Defines\ScriptCommands.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="Defines\Helpers.h">
       <Filter>Defines</Filter>
     </ClInclude>
   </ItemGroup>

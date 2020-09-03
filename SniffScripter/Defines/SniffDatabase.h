@@ -63,7 +63,7 @@ public:
         return nullptr;
     }
 
-    
+    static uint32 GetCreatureFieldValueBeforeTime(uint32 guid, uint32 unixtime, char const* fieldName);
 
     static uint32 GetCreatureEntryFromGuid(uint32 guid) { return m_creatureGuidToEntry[guid]; }
     static uint32 GetGameObjectEntryFromGuid(uint32 guid) { return m_gameObjectGuidToEntry[guid]; }

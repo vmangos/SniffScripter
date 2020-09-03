@@ -11,6 +11,7 @@
 #include "Defines\SniffDatabase.h"
 #include "Defines\SniffedEvents.h"
 #include "Defines\TimelineMaker.h"
+#include "Defines\\Helpers.h"
 
 Database GameDb;
 
@@ -50,20 +51,13 @@ std::string MakeConnectionString()
     return mysql_host + ";" + mysql_port + ";" + mysql_user + ";" + mysql_pass + ";" + mysql_db;
 }
 
-char GetChar()
-{
-    fseek(stdin, 0, SEEK_END);
-    char const chr = getchar();
-    fseek(stdin, 0, SEEK_END);
-    return chr;
-}
-
 enum
 {
     OPTION_TIMELINE_SPECIFIC_GUIDS  = 1,
     OPTION_TIMELINE_ALL_EVENTS      = 2,
     OPTION_TIMELINE_WAYPOINTS       = 3,
-    OPTION_QUESTS_WITH_RP_EVENTS    = 4,
+    OPTION_GENERATE_SCRIPT          = 4,
+    OPTION_QUESTS_WITH_RP_EVENTS    = 5,
 };
 
 int main()
@@ -86,24 +80,22 @@ int main()
     printf("1. Create timeline for specific guids\n");
     printf("2. Create timeline for all in time period\n");
     printf("3. Create waypoints and show events as comments\n");
-    printf("4. List quests with RP events\n");
+    printf("4. Create database script from selected events\n");
+    printf("5. List quests with RP events\n");
+
     printf("> ");
 
-    uint32 option = 0;
-    scanf("%u", &option);
-    fseek(stdin, 0, SEEK_END);
+    uint32 option = GetUInt32();
 
-    time_t startTime = 0;
-
-    if (option == OPTION_TIMELINE_SPECIFIC_GUIDS || option == OPTION_TIMELINE_ALL_EVENTS || option == OPTION_TIMELINE_WAYPOINTS || option == OPTION_QUESTS_WITH_RP_EVENTS)
+    if (option == OPTION_TIMELINE_SPECIFIC_GUIDS ||
+        option == OPTION_TIMELINE_ALL_EVENTS ||
+        option == OPTION_TIMELINE_WAYPOINTS ||
+        option == OPTION_QUESTS_WITH_RP_EVENTS ||
+        option == OPTION_GENERATE_SCRIPT)
     {
         
         printf("Enter sniff database name: ");
-        getline(std::cin, SniffDatabase::m_databaseName);
-        if (SniffDatabase::m_databaseName.empty())
-            SniffDatabase::m_databaseName = "sniffs_new_test";
-        fseek(stdin, 0, SEEK_END);
-
+        SniffDatabase::m_databaseName = GetString("sniffs_new_test");
         SniffDatabase::LoadSniffDatabase();
 
         if (option == OPTION_TIMELINE_SPECIFIC_GUIDS)
@@ -115,8 +107,7 @@ int main()
             while (GetChar() == 'y')
             {
                 printf("Guid: ");
-                uint32 id = 0;
-                if (scanf("%u", &id) == 1)
+                if (uint32 id = GetUInt32())
                     vCreatureGuids.push_back(id);
                 printf("Do you want to enter another creature guid? (y/n)\n> ");
             }
@@ -125,8 +116,7 @@ int main()
             while (GetChar() == 'y')
             {
                 printf("Guid: ");
-                uint32 id = 0;
-                if (scanf("%u", &id) == 1)
+                if (uint32 id = GetUInt32())
                     vGameObjectGuids.push_back(id);
                 printf("Do you want to enter another gameobject guid? (y/n)\n> ");
             }
@@ -168,12 +158,12 @@ int main()
             printf("Show when sounds or music played? (y/n)\n> ");
             bool showSounds = GetChar() == 'y';
             
-            uint32 uiStartTime = 0;
             printf("Start time: ");
-            scanf("%u", &uiStartTime);
-            startTime = uiStartTime;
+            uint32 uiStartTime = GetUInt32();
 
             TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showQuests, showUseGo, showUseItem, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
+            TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
+            return 0;
         }
         else if (option == OPTION_TIMELINE_ALL_EVENTS)
         {
@@ -234,23 +224,21 @@ int main()
             printf("Show when sounds or music played? (y/n)\n> ");
             bool showSounds = GetChar() == 'y';
 
-            uint32 uiStartTime = 0;
             printf("Start time: ");
-            scanf("%u", &uiStartTime);
-            startTime = uiStartTime;
+            uint32 uiStartTime = GetUInt32();
 
-            uint32 uiEndTime = 0;
             printf("Duration: ");
-            scanf("%u", &uiEndTime);
+            uint32 uiEndTime = GetUInt32();
             uiEndTime = uiStartTime + uiEndTime;
 
             TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showQuests, showUseGo, showUseItem, showCreatures, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectCasts, showGameObjectUpdates, showSounds);
+            TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
+            return 0;
         }
         else if (option == OPTION_TIMELINE_WAYPOINTS)
         {
             printf("Guid: ");
-            uint32 guid = 0;
-            if (scanf("%u", &guid) == 1)
+            if (uint32 guid = GetUInt32())
             {
                 printf("Use start position instead of destination? (y/n)\n> ");
                 TimelineMaker::CreateWaypoints(guid, GetChar() == 'y');
@@ -268,11 +256,23 @@ int main()
                 }
             }
         }
+        else if (option == OPTION_GENERATE_SCRIPT)
+        {
+            printf("Start time: ");
+            uint32 uiStartTime = GetUInt32();
+
+            printf("Duration: ");
+            uint32 uiEndTime = GetUInt32();
+            uiEndTime = uiStartTime + uiEndTime;
+
+            TimelineMaker::CreateScriptFromEvents(uiStartTime, uiEndTime);
+            GetChar();
+            return 0;
+        }
         else if (option == OPTION_QUESTS_WITH_RP_EVENTS)
         {
             printf("Time limit: ");
-            uint32 duration = 0;
-            if (scanf("%u", &duration) == 1)
+            if (uint32 duration = GetUInt32())
             {
                 printf("Searching for quests with an event on accept or completion...\n");
                 if (!TimelineMaker::FindQuestsWithRpEvents(duration))
@@ -283,19 +283,7 @@ int main()
         }
     }
 
-    printf("Total events: %u\n", TimelineMaker::m_eventsMap.size());
-    if (TimelineMaker::m_eventsMap.size())
-    {
-        printf("Do you want to save timeline to file? (y/n)\n> ");
-        if (GetChar() == 'y')
-            TimelineMaker::PrintTimelineToFile(startTime);
-        printf("Do you want to show timeline on screen? (y/n)\n> ");
-        if (GetChar() == 'y')
-            TimelineMaker::PrintTimelineToScreen(startTime);
-    }
-    
     GetChar();
-    
     GameDb.Uninitialise();
     return 0;
 }

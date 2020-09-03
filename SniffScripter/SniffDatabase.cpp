@@ -550,3 +550,30 @@ void SniffDatabase::LoadItemUseTimes(char const* whereClause)
         } while (result->NextRow());
     }
 }
+
+uint32 SniffDatabase::GetCreatureFieldValueBeforeTime(uint32 guid, uint32 unixtime, char const* fieldName)
+{
+    uint32 field = 0;
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `%s` FROM `%s`.`creature` WHERE `guid`=%u", fieldName, SniffDatabase::m_databaseName.c_str(), guid))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            field = pFields[0].getUInt32();
+
+        } while (result->NextRow());
+    }
+
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `%s` FROM `%s`.`creature_update` WHERE (`guid` = %u) && (`unixtime` < %u) && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), guid, unixtime, fieldName))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            field = pFields[0].getUInt32();
+
+        } while (result->NextRow());
+    }
+    return field;
+}
