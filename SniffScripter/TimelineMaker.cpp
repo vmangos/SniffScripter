@@ -1094,6 +1094,8 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
 
     m_eventsMap.clear();
 
+    // Make an unique list of objects which are sources of events.
+    // We will refer to them as Actors.
     std::vector<KnownObject> actorsList;
     for (const auto& itr : scriptEventsMap)
     {
@@ -1101,6 +1103,7 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
         if (std::find(actorsList.begin(), actorsList.end(), actor) == actorsList.end())
             actorsList.push_back(actor);
     }
+
     printf("List of actors:\n");
     printf("0. None\n");
     for (uint32 i = 0; i < actorsList.size(); i++)
@@ -1108,15 +1111,10 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
         KnownObject const& actor = actorsList[i];
         printf("%u. %s\n", i + 1, FormatObjectName(actor).c_str());
     }
+
     printf("Main actor: ");
     uint32 actorId = GetUInt32();
-    KnownObject mainActor;
-    if (actorId)
-        mainActor = actorsList[actorId - 1];
-
-    std::ofstream log("script.sql");
-    if (!log.is_open())
-        return;
+    KnownObject mainActor = actorId ? actorsList[actorId - 1] : KnownObject();
 
     printf("Main script id: ");
     uint32 mainScriptId = GetUInt32();
@@ -1124,6 +1122,11 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
     printf("Main table name: ");
     std::string mainTableName = GetString("generic_scripts");
 
+    std::ofstream log("script.sql");
+    if (!log.is_open())
+        return;
+
+    // Write header comment section.
     if (!m_unknownScriptTexts.empty() || !actorsList.empty())
     {
         log << "/*\n";
@@ -1140,7 +1143,7 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
         
         if (!m_unknownScriptTexts.empty())
         {
-            log << "The following texts need to have their broadcast id fixed:\n";
+            log << "Texts with placeholder broadcast ids:\n";
             for (uint32 i = 0; i < m_unknownScriptTexts.size(); i++)
             {
                 log << UNKNOWN_TEXTS_START + 1 + i << " - " << m_unknownScriptTexts[i] << "\n";
@@ -1151,7 +1154,51 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
         log << "*/\n\n";
     }
 
-    std::map<KnownObject, uint32> scriptIdsForObjects;
+    auto SetTargetParamsForScript = [&actorsList](ScriptInfo& script, KnownObject const& target) -> bool
+    {
+        // Set target by guid if multiple objects with same entry are involved.
+        uint32 objectsWithSameEntryCount = 0;
+        for (const auto& itr : actorsList)
+        {
+            if (itr.m_entry == target.m_entry &&
+                itr.m_type == target.m_type)
+                objectsWithSameEntryCount++;
+        }
+
+        if (target.m_type == "Creature")
+        {
+            if (objectsWithSameEntryCount > 1)
+            {
+                script.target_type = TARGET_T_CREATURE_WITH_GUID;
+                script.target_param1 = target.m_guid;
+            }
+            else
+            {
+                script.target_type = TARGET_T_CREATURE_WITH_ENTRY;
+                script.target_param1 = target.m_entry;
+                script.target_param2 = 30;
+            }
+            return true;
+        }
+        else if (target.m_type == "GameObject")
+        {
+            if (objectsWithSameEntryCount > 1)
+            {
+                script.target_type = TARGET_T_GAMEOBJECT_WITH_GUID;
+                script.target_param1 = target.m_guid;
+            }
+            else
+            {
+                script.target_type = TARGET_T_GAMEOBJECT_WITH_ENTRY;
+                script.target_param1 = target.m_entry;
+                script.target_param2 = 30;
+            }
+            return true;
+        }
+        return false;
+    };
+
+    std::map<KnownObject, std::pair<uint32, std::vector<ScriptInfo>>> genericScriptsMap;
 
     // Find which commands need to target another object, yet their source is also different from the main actor.
     // They need to be part of a separate generic script, so add those actors to the map above.
@@ -1165,221 +1212,153 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
         for (auto& script : itr.second.second)
         {
             if (source == target)
+            {
                 script.raw.data[4] = SF_GENERAL_TARGET_SELF;
-            else if (target.m_type == "Creature")
-            {
-                script.target_type = TARGET_T_CREATURE_WITH_ENTRY;
-                script.target_param1 = target.m_entry;
-                script.target_param2 = 30;
-
                 if (mainActor != source)
                 {
-                    if (scriptIdsForObjects.find(source) == scriptIdsForObjects.end())
-                        scriptIdsForObjects[source] = scriptIdsForObjects.size() + 1;
+                    if (genericScriptsMap.find(source) == genericScriptsMap.end())
+                        genericScriptsMap[source].first = genericScriptsMap.size() + 1;
                 }
             }
-            else if (target.m_type == "GameObject")
+            else if (SetTargetParamsForScript(script, target))
             {
-                script.target_type = TARGET_T_GAMEOBJECT_WITH_ENTRY;
-                script.target_param1 = target.m_entry;
-                script.target_param2 = 30;
-
                 if (mainActor != source)
                 {
-                    if (scriptIdsForObjects.find(source) == scriptIdsForObjects.end())
-                        scriptIdsForObjects[source] = scriptIdsForObjects.size() + 1;
-                }
-            }
-        }
-    }
-    
-    for (auto& itr : scriptEventsMap)
-    {
-        KnownObject source = itr.second.first.get()->GetSourceObject();
-
-        for (auto& script : itr.second.second)
-        {
-            // Assign script id for commands with source present in the map above.
-            auto scriptIdItr = scriptIdsForObjects.find(source);
-            if (scriptIdItr != scriptIdsForObjects.end())
-            {
-                script.id = scriptIdItr->second;
-            }
-            // Command does not require separate script id.
-            else
-            {
-                script.id = mainScriptId;
-                // Swap targets so that the correct source executes the command.
-                if (mainActor != source && 
-                    script.command != SCRIPT_COMMAND_TEMP_SUMMON_CREATURE &&
-                    script.command != SCRIPT_COMMAND_SUMMON_OBJECT)
-                {
-                    if (source.m_type == "Creature")
-                    {
-                        script.target_type = TARGET_T_CREATURE_WITH_ENTRY;
-                        script.target_param1 = source.m_entry;
-                        script.target_param2 = 30;
-                        script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
-                    }
-                    else if (source.m_type == "GameObject")
-                    {
-                        script.target_type = TARGET_T_GAMEOBJECT_WITH_ENTRY;
-                        script.target_param1 = source.m_entry;
-                        script.target_param2 = 30;
-                        script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
-                    }
+                    if (genericScriptsMap.find(source) == genericScriptsMap.end())
+                        genericScriptsMap[source].first = genericScriptsMap.size() + 1;
                 }
             }
         }
     }
 
-    // Assign delay for all the scripts.
-    for (auto& itr : scriptEventsMap)
-    {
-        KnownObject source = itr.second.first.get()->GetSourceObject();
-        uint32 timeDiff = itr.first - uiStartTime;
-        for (auto& script : itr.second.second)
-        {
-            script.delay = timeDiff;
-
-            if (!source.IsEmpty())
-            {
-                script.comment = EscapeString(GetObjectName(source) + " - " + script.comment);
-            }
-        }
-    }
-
-    // Save all the separate scripts first.
-    for (const auto& genericScriptItr : scriptIdsForObjects)
-    {
-        uint32 count = 0;
-        log << "-- Script for " << FormatObjectName(genericScriptItr.first) << "\n";
-        log << "DELETE FROM `generic_scripts` WHERE `id`=" << (GENERIC_SCRIPTS_START + genericScriptItr.second) << ";\n";
-        log << "INSERT INTO `generic_scripts` (`id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id`, `comments`) VALUES\n";
-        for (const auto& itr : scriptEventsMap)
-        {
-            KnownObject source = itr.second.first.get()->GetSourceObject();
-            if (source != genericScriptItr.first)
-                continue;
-
-            for (auto& script : itr.second.second)
-            {
-                // Don't include the spawn in the separate script.
-                if (script.command == SCRIPT_COMMAND_TEMP_SUMMON_CREATURE ||
-                    script.command == SCRIPT_COMMAND_SUMMON_OBJECT)
-                    break;
-
-                if (count > 0)
-                    log << ",\n";
-                log << "(" << (GENERIC_SCRIPTS_START + script.id) << ", " << script.delay << ", " << script.command << ", "
-                    << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << script.raw.data[3] << ", " 
-                    << script.target_param1 << ", " << script.target_param2 << ", " << script.target_type << ", "
-                    << script.raw.data[4] << ", " << script.raw.data[5] << ", " << script.raw.data[6] << ", " << script.raw.data[7] << ", " 
-                    << script.raw.data[8] << ", "<< script.x << ", " << script.y << ", " << script.z << ", " << script.o << ", "
-                    << script.condition << ", '" << script.comment << "')";
-
-                count++;
-            }
-        }
-        log << ";\n\n";
-    }
+    std::vector<ScriptInfo> mainScriptVector;
 
     // Check if any of the commands that require a separate script are by a creature
     // which is summoned in the main script, and assign the script id there in this case.
+    std::vector<KnownObject> creaturesSummonedByMainScript;
     for (auto& itr : scriptEventsMap)
     {
         KnownObject source = itr.second.first.get()->GetSourceObject();
-        auto scriptIdItr = scriptIdsForObjects.find(source);
-        if (scriptIdItr == scriptIdsForObjects.end())
+        auto genericItr = genericScriptsMap.find(source);
+        if (genericItr == genericScriptsMap.end())
             continue;
 
         for (auto& script : itr.second.second)
         {
             if (script.command == SCRIPT_COMMAND_TEMP_SUMMON_CREATURE)
             {
-                script.summonCreature.scriptId = GENERIC_SCRIPTS_START + scriptIdItr->second;
-                scriptIdsForObjects.erase(scriptIdItr);
+                creaturesSummonedByMainScript.push_back(genericItr->first);
+                script.summonCreature.scriptId = GENERIC_SCRIPTS_START + genericItr->second.first;
                 break;
             }
         }
     }
-
-    // Now export the main script.
+    for (const auto& itr : genericScriptsMap)
     {
-        uint32 count = 0;
-        log << "-- Main script.\n";
-        log << "DELETE FROM `" << mainTableName << "` WHERE `id`=" << mainScriptId << ";\n";
-        log << "INSERT INTO `" << mainTableName << "` (`id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id`, `comments`) VALUES\n";
-        // Add START_SCRIPT commands for objects that have separate scripts.
-        for (const auto& genericScriptItr : scriptIdsForObjects)
+        // Its not summoned from the main script, so add a START SCRIPT command.
+        if (std::find(creaturesSummonedByMainScript.begin(), creaturesSummonedByMainScript.end(), itr.first) == creaturesSummonedByMainScript.end())
         {
-            if (count > 0)
-                log << ",\n";
-
             ScriptInfo script;
             script.id = mainScriptId;
             script.command = SCRIPT_COMMAND_START_SCRIPT;
-            script.startScript.scriptId[0] = GENERIC_SCRIPTS_START + genericScriptItr.second;
+            script.startScript.scriptId[0] = GENERIC_SCRIPTS_START + itr.second.first;
             script.startScript.chance[0] = 100;
-            script.comment = "Start Script for " + EscapeString(GetObjectName(genericScriptItr.first));
-            if (genericScriptItr.first.m_type == "Creature")
-            {
-                script.target_type = TARGET_T_CREATURE_WITH_ENTRY;
-                script.target_param1 = genericScriptItr.first.m_entry;
-                script.target_param2 = 30;
-                script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
-            }
-            else if (genericScriptItr.first.m_type == "GameObject")
-            {
-                script.target_type = TARGET_T_GAMEOBJECT_WITH_ENTRY;
-                script.target_param1 = genericScriptItr.first.m_entry;
-                script.target_param2 = 30;
-                script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
-            }
-
-            log << "(" << script.id << ", " << script.delay << ", " << script.command << ", "
-                << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << script.raw.data[3] << ", "
-                << script.target_param1 << ", " << script.target_param2 << ", " << script.target_type << ", "
-                << script.raw.data[4] << ", " << script.raw.data[5] << ", " << script.raw.data[6] << ", " << script.raw.data[7] << ", "
-                << script.raw.data[8] << ", " << script.x << ", " << script.y << ", " << script.z << ", " << script.o << ", "
-                << script.condition << ", '" << script.comment << "')";
-
-            count++;
+            script.comment = "Start Script for " + EscapeString(GetObjectName(itr.first));
+            mainScriptVector.push_back(script);
         }
-        // Actually export the main script now.
-        for (const auto& itr : scriptEventsMap)
-        {
-            KnownObject source = itr.second.first.get()->GetSourceObject();
-            auto scriptIdItr = scriptIdsForObjects.find(source);
+    }
 
-            for (const auto& script : itr.second.second)
+    for (auto& itr : scriptEventsMap)
+    {
+        uint32 timeDiff = itr.first - uiStartTime;
+        KnownObject source = itr.second.first.get()->GetSourceObject();
+
+        for (auto& script : itr.second.second)
+        {
+            // Assign delay for all scripts.
+            script.delay = timeDiff;
+
+            // Add source name to the comment.
+            if (!source.IsEmpty())
+                script.comment = EscapeString(GetObjectName(source) + " - " + script.comment);
+
+            // Assign script id for commands with source present in the map above.
+            auto genericItr = genericScriptsMap.find(source);
+
+            if (genericItr != genericScriptsMap.end() &&
+                script.command != SCRIPT_COMMAND_TEMP_SUMMON_CREATURE &&
+                script.command != SCRIPT_COMMAND_SUMMON_OBJECT)
             {
-                // Skip objects that have a separate script.
-                if (scriptIdItr != scriptIdsForObjects.end() &&
-                    // Include the spawn command in the main script,
-                    // even if this object has its own separate script.
+                script.id = GENERIC_SCRIPTS_START + genericItr->second.first;
+                genericItr->second.second.push_back(script);
+            }
+            // Command does not require separate script id.
+            else
+            {
+                script.id = mainScriptId;
+
+                // Swap targets so that the correct source executes the command.
+                if (mainActor != source && 
                     script.command != SCRIPT_COMMAND_TEMP_SUMMON_CREATURE &&
                     script.command != SCRIPT_COMMAND_SUMMON_OBJECT)
-                    break;
-
-                if (count > 0)
-                    log << ",\n";
-                log << "(" << script.id << ", " << script.delay << ", " << script.command << ", "
-                    << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << script.raw.data[3] << ", "
-                    << script.target_param1 << ", " << script.target_param2 << ", " << script.target_type << ", "
-                    << script.raw.data[4] << ", " << script.raw.data[5] << ", " << script.raw.data[6] << ", " << script.raw.data[7] << ", "
-                    << script.raw.data[8] << ", " << script.x << ", " << script.y << ", " << script.z << ", " << script.o << ", "
-                    << script.condition << ", '" << script.comment << "')";
-
-                count++;
+                {
+                    if (SetTargetParamsForScript(script, source))
+                        script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
+                }
+                mainScriptVector.push_back(script);
             }
         }
-        log << ";\n\n";
     }
+
+    // Save all the separate scripts first.
+    for (const auto& itr : genericScriptsMap)
+    {
+        // Correct delay for the generic script, if its started from the SUMMON_CREATURE command.
+        // The delay for that command needs to be substracted from all actions in the generic script.
+        uint32 delayOffset = 0;
+        if (std::find(creaturesSummonedByMainScript.begin(), creaturesSummonedByMainScript.end(), itr.first) != creaturesSummonedByMainScript.end())
+        {
+            for (const auto itr2 : mainScriptVector)
+            {
+                if (itr2.command == SCRIPT_COMMAND_TEMP_SUMMON_CREATURE)
+                {
+                    delayOffset = itr2.delay;
+                    break;
+                }
+            }
+        }
+        
+        log << "-- Script for " << FormatObjectName(itr.first) << "\n";
+        WriteScriptToFile(log, GENERIC_SCRIPTS_START + itr.second.first, "generic_scripts", itr.second.second, delayOffset);
+    }
+
+    log << "-- Main script.\n";
+    WriteScriptToFile(log, mainScriptId, mainTableName, mainScriptVector, 0);
 
     printf("Script has been saved to file.\n");
 
     log.close();
+}
+
+void TimelineMaker::WriteScriptToFile(std::ofstream& log, uint32 scriptId, std::string tableName, std::vector<ScriptInfo> const& vScripts, uint32 delayOffset)
+{
+    uint32 count = 0;
+    log << "DELETE FROM `" << tableName << "` WHERE `id`=" << scriptId << ";\n";
+    log << "INSERT INTO `" << tableName << "` (`id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id`, `comments`) VALUES\n";
+    for (const auto& script : vScripts)
+    {
+        if (count > 0)
+            log << ",\n";
+        log << "(" << script.id << ", " << script.delay - delayOffset << ", " << script.command << ", "
+            << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << script.raw.data[3] << ", "
+            << script.target_param1 << ", " << script.target_param2 << ", " << script.target_type << ", "
+            << script.raw.data[4] << ", " << script.raw.data[5] << ", " << script.raw.data[6] << ", " << script.raw.data[7] << ", "
+            << script.raw.data[8] << ", " << script.x << ", " << script.y << ", " << script.z << ", " << script.o << ", "
+            << script.condition << ", '" << script.comment << "')";
+
+        count++;
+    }
+    log << ";\n\n";
 }
 
 std::vector<std::string> TimelineMaker::m_unknownScriptTexts;

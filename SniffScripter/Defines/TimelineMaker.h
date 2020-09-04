@@ -23,6 +23,7 @@ public:
     static bool FindQuestsWithRpEvents(uint32 duration);
 
     static void CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime);
+    static void WriteScriptToFile(std::ofstream& log, uint32 scriptId, std::string tableName, std::vector<ScriptInfo> const& vScripts, uint32 delayOffset);
     static void GetScriptInfoFromSniffedEvent(time_t unixtime, std::shared_ptr<SniffedEvent> sniffedEvent, std::vector<ScriptInfo>& scriptActions);
     static uint32 GetTemporaryIdForUnknownBroadcastText(std::string text);
     static std::vector<std::string> m_unknownScriptTexts;
