@@ -1264,6 +1264,10 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
             script.startScript.scriptId[0] = GENERIC_SCRIPTS_START + itr.second.first;
             script.startScript.chance[0] = 100;
             script.comment = "Start Script for " + EscapeString(GetObjectName(itr.first));
+
+            if (SetTargetParamsForScript(script, itr.first))
+                script.raw.data[4] |= SF_GENERAL_SWAP_FINAL_TARGETS;
+
             mainScriptVector.push_back(script);
         }
     }
