@@ -34,7 +34,7 @@ class DbField
             if (m_pData)
             {
                 uint64 value;
-                sscanf(m_pData, "%llu", &value);
+                sscanf_s(m_pData, "%llu", &value);
                 return value;
             }
             

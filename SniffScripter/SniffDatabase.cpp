@@ -82,7 +82,7 @@ void SniffDatabase::LoadSpellCastStart(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 casterGuid = pFields[1].getUInt32();
             uint32 casterId = pFields[2].getUInt32();
             std::string casterType = pFields[3].getCppString();
@@ -106,7 +106,7 @@ void SniffDatabase::LoadSpellCastGo(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 casterGuid = pFields[1].getUInt32();
             uint32 casterId = pFields[2].getUInt32();
             std::string casterType = pFields[3].getCppString();
@@ -140,7 +140,7 @@ void SniffDatabase::LoadPlaySound(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 soundId = pFields[1].getUInt32();
             uint32 sourceGuid = pFields[2].getUInt32();
             uint32 sourceId = pFields[3].getUInt32();
@@ -161,7 +161,7 @@ void SniffDatabase::LoadPlayMusic(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 musicId = pFields[0].getUInt32();
 
             std::shared_ptr<SniffedEvent_PlayMusic> newEvent = std::make_shared<SniffedEvent_PlayMusic>(musicId);
@@ -190,7 +190,7 @@ void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereC
 
             uint32 guid = pFields[0].getUInt32();;
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
-            time_t unixtime = pFields[1].getUInt32();
+            uint32 unixtime = pFields[1].getUInt32();
             uint32 value = pFields[2].getUInt32();
 
             std::shared_ptr<T> newEvent = std::make_shared<T>(guid, creatureId, value);
@@ -208,7 +208,7 @@ void SniffDatabase::LoadCreatureText(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 creatureGuid = pFields[1].getUInt32();
             uint32 creatureId = pFields[2].getUInt32();
             uint32 groupId = pFields[3].getUInt32();
@@ -244,7 +244,7 @@ void SniffDatabase::LoadCreatureMovement(char const* whereClause)
             float endY = pFields[7].getFloat();
             float endZ = pFields[8].getFloat();
             float orientation = pFields[9].getFloat();
-            time_t unixtime = pFields[10].getUInt32();
+            uint32 unixtime = pFields[10].getUInt32();
 
             std::shared_ptr<SniffedEvent_CreatureMovement> newEvent = std::make_shared<SniffedEvent_CreatureMovement>(guid, creatureId, point, moveTime, startX, startY, startZ, endX, endY, endZ, orientation);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
@@ -261,7 +261,7 @@ void SniffDatabase::LoadCreatureEmote(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 emoteId = pFields[1].getUInt32();
             std::string emoteName = pFields[2].getCppString();
             uint32 guid = pFields[3].getUInt32();
@@ -282,7 +282,7 @@ void SniffDatabase::LoadCreatureAttackStart(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 victimGuid = pFields[1].getUInt32();
             uint32 victimId = pFields[2].getUInt32();
             std::string victimType = pFields[3].getCppString();
@@ -304,7 +304,7 @@ void SniffDatabase::LoadCreatureAttackStop(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 victimGuid = pFields[1].getUInt32();
             uint32 victimId = pFields[2].getUInt32();
             std::string victimType = pFields[3].getCppString();
@@ -328,7 +328,7 @@ void SniffDatabase::LoadCreatureDestroy(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
-            time_t unixtime = pFields[1].getUInt32();
+            uint32 unixtime = pFields[1].getUInt32();
 
             std::shared_ptr<SniffedEvent_CreatureDestroy> newEvent = std::make_shared<SniffedEvent_CreatureDestroy>(guid, creatureId);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
@@ -347,7 +347,7 @@ void SniffDatabase::LoadCreatureCreate2(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
-            time_t unixtime = pFields[1].getUInt32();
+            uint32 unixtime = pFields[1].getUInt32();
             float position_x = pFields[2].getFloat();
             float position_y = pFields[3].getFloat();
             float position_z = pFields[4].getFloat();
@@ -370,7 +370,7 @@ void SniffDatabase::LoadCreatureCreate1(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
-            time_t unixtime = pFields[1].getUInt32();
+            uint32 unixtime = pFields[1].getUInt32();
             float position_x = pFields[2].getFloat();
             float position_y = pFields[3].getFloat();
             float position_z = pFields[4].getFloat();
@@ -393,7 +393,7 @@ void SniffDatabase::LoadGameObjectDestroy(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 entry = GetGameObjectEntryFromGuid(guid);
-            time_t unixtime = pFields[1].getUInt32();
+            uint32 unixtime = pFields[1].getUInt32();
 
             std::shared_ptr<SniffedEvent_GameObjectDestroy> newEvent = std::make_shared<SniffedEvent_GameObjectDestroy>(guid, entry);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
@@ -412,7 +412,7 @@ void SniffDatabase::LoadGameObjectCreate2(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 entry = GetGameObjectEntryFromGuid(guid);
-            time_t unixtime = pFields[1].getUInt32();
+            uint32 unixtime = pFields[1].getUInt32();
             float position_x = pFields[2].getFloat();
             float position_y = pFields[3].getFloat();
             float position_z = pFields[4].getFloat();
@@ -435,7 +435,7 @@ void SniffDatabase::LoadGameObjectCreate1(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 entry = GetGameObjectEntryFromGuid(guid);
-            time_t unixtime = pFields[1].getUInt32();
+            uint32 unixtime = pFields[1].getUInt32();
             float position_x = pFields[2].getFloat();
             float position_y = pFields[3].getFloat();
             float position_z = pFields[4].getFloat();
@@ -462,7 +462,7 @@ void SniffDatabase::LoadGameObjectUpdate(char const* fieldName, char const* wher
 
             uint32 guid = pFields[0].getUInt32();;
             uint32 entry = GetGameObjectEntryFromGuid(guid);
-            time_t unixtime = pFields[1].getUInt32();
+            uint32 unixtime = pFields[1].getUInt32();
             uint32 value = pFields[2].getUInt32();
 
             std::shared_ptr<T> newEvent = std::make_shared<T>(guid, entry, value);
@@ -480,7 +480,7 @@ void SniffDatabase::LoadQuestAcceptTimes(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 objectGuid = pFields[1].getUInt32();
             uint32 objectId = pFields[2].getUInt32();
             std::string objectType = pFields[3].getCppString();
@@ -501,7 +501,7 @@ void SniffDatabase::LoadQuestCompleteTimes(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 objectGuid = pFields[1].getUInt32();
             uint32 objectId = pFields[2].getUInt32();
             std::string objectType = pFields[3].getCppString();
@@ -522,7 +522,7 @@ void SniffDatabase::LoadCreatureInteractTimes(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 guid = pFields[1].getUInt32();
             uint32 entry = GetCreatureEntryFromGuid(guid);
 
@@ -541,7 +541,7 @@ void SniffDatabase::LoadGameObjectUseTimes(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 guid = pFields[1].getUInt32();
             uint32 entry = GetGameObjectEntryFromGuid(guid);
 
@@ -560,7 +560,7 @@ void SniffDatabase::LoadItemUseTimes(char const* whereClause)
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            time_t unixtime = pFields[0].getUInt32();
+            uint32 unixtime = pFields[0].getUInt32();
             uint32 entry = pFields[1].getUInt32();
 
             std::shared_ptr<SniffedEvent_ItemUse> newEvent = std::make_shared<SniffedEvent_ItemUse>(entry);

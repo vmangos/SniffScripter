@@ -6,7 +6,7 @@
 uint32 GetUInt32()
 {
     uint32 value = 0;
-    scanf("%u", &value);
+    scanf_s("%u", &value);
     return value;
 }
 
