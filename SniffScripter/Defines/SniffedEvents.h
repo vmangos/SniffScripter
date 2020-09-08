@@ -99,8 +99,9 @@ enum SniffedEventType : uint8
     SE_SPELL_CAST_GO,
     SE_CLIENT_QUEST_ACCEPT,
     SE_CLIENT_QUEST_COMPLETE,
-    SE_CLIENT_ITEM_USE,
-    SE_CLIENT_GAMEOBJECT_USE
+    SE_CLIENT_CREATURE_INTERACT,
+    SE_CLIENT_GAMEOBJECT_USE,
+    SE_CLIENT_ITEM_USE
 };
 
 struct SniffedEvent
@@ -814,19 +815,20 @@ struct SniffedEvent_QuestComplete : SniffedEvent
     }
 };
 
-struct SniffedEvent_ItemUse : SniffedEvent
+struct SniffedEvent_CreatureInteract : SniffedEvent
 {
-    SniffedEvent_ItemUse(uint32 itemId) :
-        m_itemId(itemId) {};
-    uint32 m_itemId = 0;
+    SniffedEvent_CreatureInteract(uint32 guid, uint32 entry) :
+        m_guid(guid), m_entry(entry) {};
+    uint32 m_guid = 0;
+    uint32 m_entry = 0;
     std::string ToString(bool /*singleLine*/) const final
     {
-        std::string txt = "Client uses Item " + std::to_string(m_itemId) + " (" + WorldDatabase::GetItemName(m_itemId) + ").";
+        std::string txt = "Client interacts with Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ").";
         return txt;
     }
     SniffedEventType GetType() const final
     {
-        return SE_CLIENT_ITEM_USE;
+        return SE_CLIENT_CREATURE_INTERACT;
     }
 };
 
@@ -844,6 +846,22 @@ struct SniffedEvent_GameObjectUse : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CLIENT_GAMEOBJECT_USE;
+    }
+};
+
+struct SniffedEvent_ItemUse : SniffedEvent
+{
+    SniffedEvent_ItemUse(uint32 itemId) :
+        m_itemId(itemId) {};
+    uint32 m_itemId = 0;
+    std::string ToString(bool /*singleLine*/) const final
+    {
+        std::string txt = "Client uses Item " + std::to_string(m_itemId) + " (" + WorldDatabase::GetItemName(m_itemId) + ").";
+        return txt;
+    }
+    SniffedEventType GetType() const final
+    {
+        return SE_CLIENT_ITEM_USE;
     }
 };
 

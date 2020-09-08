@@ -50,6 +50,7 @@ public:
     static void LoadGameObjectUpdate(char const* fieldName, char const* whereClause);
     static void LoadQuestAcceptTimes(char const* whereClause);
     static void LoadQuestCompleteTimes(char const* whereClause);
+    static void LoadCreatureInteractTimes(char const* whereClause);
     static void LoadGameObjectUseTimes(char const* whereClause);
     static void LoadItemUseTimes(char const* whereClause);
 

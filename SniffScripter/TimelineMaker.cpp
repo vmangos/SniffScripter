@@ -13,7 +13,7 @@
 extern Database GameDb;
 std::multimap<time_t, std::shared_ptr<SniffedEvent>> TimelineMaker::m_eventsMap;
 
-void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint32>& vCreatureGuids, std::vector<uint32> vGameObjectGuids, bool showQuests, bool showGoUse, bool showItemUse, bool showAttacks, bool showTexts, bool showEmotes, bool showMoves, bool showUpdates, bool showCasts, bool showSounds)
+void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint32>& vCreatureGuids, std::vector<uint32> vGameObjectGuids, bool showQuests, bool showCreatureInteract, bool showGameObjectUse, bool showItemUse, bool showAttacks, bool showTexts, bool showEmotes, bool showMoves, bool showUpdates, bool showCasts, bool showSounds)
 {
     for (const auto& guid : vCreatureGuids)
     {
@@ -29,6 +29,13 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
             char whereClause[128] = {};
             sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
             SniffDatabase::LoadCreatureCreate2(whereClause);
+        }
+
+        if (!showCreatureInteract)
+        {
+            char whereClause[128] = {};
+            sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            SniffDatabase::LoadCreatureInteractTimes(whereClause);
         }
 
         if (showAttacks)
@@ -162,7 +169,7 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
             SniffDatabase::LoadGameObjectCreate2(whereClause);
         }
 
-        if (!showGoUse)
+        if (!showGameObjectUse)
         {
             char whereClause[128] = {};
             sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
@@ -256,7 +263,14 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
         SniffDatabase::LoadItemUseTimes(whereClause);
     }
 
-    if (showGoUse)
+    if (showCreatureInteract)
+    {
+        char whereClause[128] = {};
+        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        SniffDatabase::LoadCreatureInteractTimes(whereClause);
+    }
+
+    if (showGameObjectUse)
     {
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
@@ -264,9 +278,30 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
     }
 }
 
-void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, bool showQuests, bool showUseGo, bool showUseItem, bool showCreatures, bool showCreatureAttacks, bool showCreatureTexts, bool showCreatureEmotes, bool showCreatureMoves, bool showCreatureCasts, bool showCreatureUpdates, bool showGameObjects, bool showGameObjectCasts, bool showGameObjectUpdates, bool showSounds)
+void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, bool showQuests, bool showUseItem, bool showCreatures, bool showCreatureInteract, bool showCreatureAttacks, bool showCreatureTexts, bool showCreatureEmotes, bool showCreatureMoves, bool showCreatureCasts, bool showCreatureUpdates, bool showGameObjects, bool showGameObjectUse, bool showGameObjectCasts, bool showGameObjectUpdates, bool showSounds)
 {
     // Client Actions
+
+    if (showGameObjectUse)
+    {
+        char whereClause[128] = {};
+        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        SniffDatabase::LoadGameObjectUseTimes(whereClause);
+    }
+
+    if (showCreatureInteract)
+    {
+        char whereClause[128] = {};
+        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        SniffDatabase::LoadCreatureInteractTimes(whereClause);
+    }
+
+    if (showUseItem)
+    {
+        char whereClause[128] = {};
+        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        SniffDatabase::LoadItemUseTimes(whereClause);
+    }
 
     if (showQuests)
     {
@@ -280,20 +315,6 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
         char whereClause[128] = {};
         sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
         SniffDatabase::LoadQuestCompleteTimes(whereClause);
-    }
-
-    if (showUseItem)
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadItemUseTimes(whereClause);
-    }
-
-    if (showUseGo)
-    {
-        char whereClause[128] = {};
-        sprintf(whereClause, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
-        SniffDatabase::LoadGameObjectUseTimes(whereClause);
     }
 
     // Creatures
@@ -732,7 +753,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
     {
         char whereClause[128] = {};
         sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
-        SniffDatabase::LoadCreatureDestroy(whereClause);
+        SniffDatabase::LoadCreatureInteractTimes(whereClause);
     }
 
     {
@@ -811,6 +832,12 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
         char whereClause[128] = {};
         sprintf(whereClause, "(`CasterGuid` = %u) && (`CasterType` = 'Creature') && (`UnixTime` >= %u)", guid, firstMoveTime);
         SniffDatabase::LoadSpellCastGo(whereClause);
+    }
+
+    {
+        char whereClause[128] = {};
+        sprintf(whereClause, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        SniffDatabase::LoadCreatureDestroy(whereClause);
     }
 }
 
@@ -1062,7 +1089,7 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
 
 void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
 {
-    CreateTimelineForAll(uiStartTime, uiEndTime, true, true, true, true, true, true, true, true, true, true, true, true, true, true);
+    CreateTimelineForAll(uiStartTime, uiEndTime, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true);
     if (m_eventsMap.empty())
     {
         printf("No events found in time period.\n");

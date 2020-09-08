@@ -476,7 +476,7 @@ inline std::string GetNpcFlagNames(uint32 flags)
     std::string flagNames;
     for (uint32 i = 0; i < Classic::MAX_NPC_FLAGS; i++)
     {
-        uint32 flag = pow(2, i);
+        uint32 flag = (uint32)pow(2, i);
         if (flags & flag)
         {
             if (!flagNames.empty())
@@ -617,7 +617,7 @@ inline std::string GetUnitFlagNames(uint32 flags)
     std::string flagNames;
     for (uint32 i = 0; i < MAX_UNIT_FLAGS; i++)
     {
-        uint32 flag = pow(2, i);
+        uint32 flag = (uint32)pow(2, i);
         if (flags & flag)
         {
             if (!flagNames.empty())
@@ -681,7 +681,7 @@ inline std::string GetGameObjectFlagNames(uint32 flags)
     std::string flagNames;
     for (uint32 i = 0; i < 32; i++)
     {
-        uint32 flag = pow(2, i);
+        uint32 flag = (uint32)pow(2, i);
         if (flags & flag)
         {
             if (!flagNames.empty())

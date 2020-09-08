@@ -514,6 +514,25 @@ void SniffDatabase::LoadQuestCompleteTimes(char const* whereClause)
     }
 }
 
+void SniffDatabase::LoadCreatureInteractTimes(char const* whereClause)
+{
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `guid` FROM `%s`.`creature_client_interact` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            time_t unixtime = pFields[0].getUInt32();
+            uint32 guid = pFields[1].getUInt32();
+            uint32 entry = GetCreatureEntryFromGuid(guid);
+
+            std::shared_ptr<SniffedEvent_CreatureInteract> newEvent = std::make_shared<SniffedEvent_CreatureInteract>(guid, entry);
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+
+        } while (result->NextRow());
+    }
+}
+
 void SniffDatabase::LoadGameObjectUseTimes(char const* whereClause)
 {
     if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `guid` FROM `%s`.`gameobject_client_use` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))

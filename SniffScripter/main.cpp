@@ -131,8 +131,11 @@ int main()
             printf("Show when client accepted or turned in quests? (y/n)\n> ");
             bool showQuests = GetChar() == 'y';
 
+            printf("Show when client interacted with creatures? (y/n)\n> ");
+            bool showCreatureInteract = GetChar() == 'y';
+
             printf("Show when client used gameobjects? (y/n)\n> ");
-            bool showUseGo = GetChar() == 'y';
+            bool showGameObjectUse = GetChar() == 'y';
 
             printf("Show when client used items? (y/n)\n> ");
             bool showUseItem = GetChar() == 'y';
@@ -161,7 +164,7 @@ int main()
             printf("Start time: ");
             uint32 uiStartTime = GetUInt32();
 
-            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showQuests, showUseGo, showUseItem, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
+            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showQuests, showCreatureInteract, showGameObjectUse, showUseItem, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
             return 0;
         }
@@ -170,14 +173,12 @@ int main()
             printf("Show when client accepted or turned in quests? (y/n)\n> ");
             bool showQuests = GetChar() == 'y';
 
-            printf("Show when client used gameobjects? (y/n)\n> ");
-            bool showUseGo = GetChar() == 'y';
-
             printf("Show when client used items? (y/n)\n> ");
             bool showUseItem = GetChar() == 'y';
 
             printf("Show creature related events? (y/n)\n> ");
             bool showCreatures = GetChar() == 'y';
+            bool showCreatureInteract = false;
             bool showCreatureAttacks = false;
             bool showCreatureTexts = false;
             bool showCreatureEmotes = false;
@@ -186,6 +187,9 @@ int main()
             bool showCreatureUpdates = false;
             if (showCreatures)
             {
+                printf("Show when client interacted with creatures? (y/n)\n> ");
+                showCreatureInteract = GetChar() == 'y';
+
                 printf("Show when creatures attacked something? (y/n)\n> ");
                 showCreatureAttacks = GetChar() == 'y';
 
@@ -207,10 +211,14 @@ int main()
             
             printf("Show gameobject related events? (y/n)\n> ");
             bool showGameObjects = GetChar() == 'y';
+            bool showGameObjectUse = false;
             bool showGameObjectCasts = false;
             bool showGameObjectUpdates = false;
             if (showGameObjects)
             {
+                printf("Show when client used gameobjects? (y/n)\n> ");
+                showGameObjectUse = GetChar() == 'y';
+
                 printf("Show when gameobjects casted spells? (y/n)\n> ");
                 showGameObjectCasts = GetChar() == 'y';
 
@@ -231,7 +239,7 @@ int main()
             uint32 uiEndTime = GetUInt32();
             uiEndTime = uiStartTime + uiEndTime;
 
-            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showQuests, showUseGo, showUseItem, showCreatures, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectCasts, showGameObjectUpdates, showSounds);
+            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showQuests, showUseItem, showCreatures, showCreatureInteract, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectUse, showGameObjectCasts, showGameObjectUpdates, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
             return 0;
         }
