@@ -226,9 +226,6 @@ int main()
                 showGameObjectUpdates = GetChar() == 'y';
             }
 
-            printf("Show spell casts? (y/n)\n> ");
-            bool showCasts = GetChar() == 'y';
-
             printf("Show when sounds or music played? (y/n)\n> ");
             bool showSounds = GetChar() == 'y';
 
@@ -250,7 +247,7 @@ int main()
             {
                 printf("Use start position instead of destination? (y/n)\n> ");
                 TimelineMaker::CreateWaypoints(guid, GetChar() == 'y');
-                if (uint32 count = TimelineMaker::PrintWaypointsToFile())
+                if (uint32 count = TimelineMaker::SaveWaypointsToFile())
                 {
                     printf("Saved %u points to file.", count);
                     GetChar();

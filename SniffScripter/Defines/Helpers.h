@@ -1,7 +1,7 @@
 #ifndef _HELPERS_H
 #define _HELPERS_H
 
-#include "Defines\Common.h"
+#include "Common.h"
 #include <string>
 
 uint32 GetUInt32();

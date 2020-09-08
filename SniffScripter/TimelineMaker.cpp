@@ -514,7 +514,7 @@ void TimelineMaker::PromptTimelineSaveMethod(uint32 startTime)
     {
         printf("Do you want to save timeline to file? (y/n)\n> ");
         if (GetChar() == 'y')
-            TimelineMaker::PrintTimelineToFile(startTime);
+            TimelineMaker::SaveTimelineToFile(startTime);
         printf("Do you want to show timeline on screen? (y/n)\n> ");
         if (GetChar() == 'y')
             TimelineMaker::PrintTimelineToScreen(startTime);
@@ -543,7 +543,7 @@ std::string GetTimeString(time_t eventTime)
     return std::string(buff);
 }
 
-void TimelineMaker::PrintTimelineToFile(uint32 startTime)
+void TimelineMaker::SaveTimelineToFile(uint32 startTime)
 {
     std::ofstream log("timeline.txt");
     if (!log.is_open())
@@ -841,7 +841,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
     }
 }
 
-uint32 TimelineMaker::PrintWaypointsToFile()
+uint32 TimelineMaker::SaveWaypointsToFile()
 {
     if (m_eventsMap.empty())
         return 0;
@@ -1360,18 +1360,18 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
         }
         
         log << "-- Script for " << FormatObjectName(itr.first) << "\n";
-        WriteScriptToFile(log, GENERIC_SCRIPTS_START + itr.second.first, "generic_scripts", itr.second.second, delayOffset);
+        SaveScriptToFile(log, GENERIC_SCRIPTS_START + itr.second.first, "generic_scripts", itr.second.second, delayOffset);
     }
 
     log << "-- Main script.\n";
-    WriteScriptToFile(log, mainScriptId, mainTableName, mainScriptVector, 0);
+    SaveScriptToFile(log, mainScriptId, mainTableName, mainScriptVector, 0);
 
     printf("Script has been saved to file.\n");
 
     log.close();
 }
 
-void TimelineMaker::WriteScriptToFile(std::ofstream& log, uint32 scriptId, std::string tableName, std::vector<ScriptInfo> const& vScripts, uint32 delayOffset)
+void TimelineMaker::SaveScriptToFile(std::ofstream& log, uint32 scriptId, std::string tableName, std::vector<ScriptInfo> const& vScripts, uint32 delayOffset)
 {
     uint32 count = 0;
     log << "DELETE FROM `" << tableName << "` WHERE `id`=" << scriptId << ";\n";
