@@ -128,6 +128,12 @@ int main()
                 return 1;
             }
 
+            printf("Show when client reclaimed his corpse? (y/n)\n> ");
+            bool showReclaimCorpse = GetChar() == 'y';
+
+            printf("Show when client released his spirit? (y/n)\n> ");
+            bool showReleaseSpirit = GetChar() == 'y';
+
             printf("Show when client accepted or turned in quests? (y/n)\n> ");
             bool showQuests = GetChar() == 'y';
 
@@ -164,12 +170,18 @@ int main()
             printf("Start time: ");
             uint32 uiStartTime = GetUInt32();
 
-            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showQuests, showCreatureInteract, showGameObjectUse, showUseItem, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
+            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
             return 0;
         }
         else if (option == OPTION_TIMELINE_ALL_EVENTS)
         {
+            printf("Show when client reclaimed his corpse? (y/n)\n> ");
+            bool showReclaimCorpse = GetChar() == 'y';
+
+            printf("Show when client released his spirit? (y/n)\n> ");
+            bool showReleaseSpirit = GetChar() == 'y';
+
             printf("Show when client accepted or turned in quests? (y/n)\n> ");
             bool showQuests = GetChar() == 'y';
 
@@ -236,7 +248,7 @@ int main()
             uint32 uiEndTime = GetUInt32();
             uiEndTime = uiStartTime + uiEndTime;
 
-            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showQuests, showUseItem, showCreatures, showCreatureInteract, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectUse, showGameObjectCasts, showGameObjectUpdates, showSounds);
+            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showReclaimCorpse, showReleaseSpirit, showQuests, showUseItem, showCreatures, showCreatureInteract, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectUse, showGameObjectCasts, showGameObjectUpdates, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
             return 0;
         }

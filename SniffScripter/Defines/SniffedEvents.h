@@ -6,6 +6,7 @@
 #include "Common.h"
 #include "GameEnums.h"
 #include "WorldDatabase.h"
+#include "SniffDatabase.h"
 
 struct KnownObject
 {
@@ -41,7 +42,7 @@ inline std::string FormatObjectName(uint32 guid, uint32 id, std::string type)
 {
     std::string name;
     if (type == "Player")
-        name = type + " (Guid: " + std::to_string(guid) + ")";
+        name = "Player " + SniffDatabase::GetPlayerName(guid) + " (Guid: " + std::to_string(guid) + ")";
     else if (type == "Creature")
         name = "Creature " + WorldDatabase::GetCreatureName(id) + " (Guid: " + std::to_string(guid) + " Entry: " + std::to_string(id) + ")";
     else if (type == "GameObject")
@@ -101,7 +102,9 @@ enum SniffedEventType : uint8
     SE_CLIENT_QUEST_COMPLETE,
     SE_CLIENT_CREATURE_INTERACT,
     SE_CLIENT_GAMEOBJECT_USE,
-    SE_CLIENT_ITEM_USE
+    SE_CLIENT_ITEM_USE,
+    SE_CLIENT_RECLAIM_CORPSE,
+    SE_CLIENT_RELEASE_SPIRIT
 };
 
 struct SniffedEvent
@@ -731,8 +734,8 @@ struct SniffedEvent_SpellCastStart : SniffedEvent
 
 struct SniffedEvent_SpellCastGo: SniffedEvent
 {
-    SniffedEvent_SpellCastGo(uint32 spellId, uint32 casterGuid, uint32 casterId, std::string casterType, uint32 targetGuid, uint32 targetId, std::string targetType, uint32 hitTargetsCount, std::vector<std::pair<uint32, std::string>> hitTargets) :
-        m_spellId(spellId), m_casterGuid(casterGuid), m_casterId(casterId), m_casterType(casterType), m_targetGuid(targetGuid), m_targetId(targetId), m_targetType(targetType), m_hitTargetsCount(hitTargetsCount), m_hitTargets(hitTargets) {};
+    SniffedEvent_SpellCastGo(uint32 spellId, uint32 casterGuid, uint32 casterId, std::string casterType, uint32 targetGuid, uint32 targetId, std::string targetType, uint32 hitTargetsCount, uint32 hitTargetsListId) :
+        m_spellId(spellId), m_casterGuid(casterGuid), m_casterId(casterId), m_casterType(casterType), m_targetGuid(targetGuid), m_targetId(targetId), m_targetType(targetType), m_hitTargetsCount(hitTargetsCount), m_hitTargetsListId(hitTargetsListId) {};
     uint32 m_spellId = 0;
     uint32 m_casterGuid = 0;
     uint32 m_casterId = 0;
@@ -741,7 +744,7 @@ struct SniffedEvent_SpellCastGo: SniffedEvent
     uint32 m_targetId = 0;
     std::string m_targetType;
     uint32 m_hitTargetsCount = 0;
-    std::vector<std::pair<uint32, std::string>> m_hitTargets;
+    uint32 m_hitTargetsListId;
     std::string ToString(bool singleLine) const final
     {
         std::string txt = FormatObjectName(m_casterGuid, m_casterId, m_casterType) + " casts spell " + std::to_string(m_spellId) + " (" + WorldDatabase::GetSpellName(m_spellId);
@@ -753,11 +756,14 @@ struct SniffedEvent_SpellCastGo: SniffedEvent
         if (!singleLine)
         {
             txt += "\n" + std::to_string(m_hitTargetsCount) + " targets hit: ";
-            for (uint32 i = 0; i < m_hitTargets.size(); i++)
+            if (std::vector<KnownObject>* pTargets = SniffDatabase::GetSpellGoHitTargets(m_hitTargetsListId))
             {
-                if (i > 0)
-                    txt += ", ";
-                txt += m_hitTargets[i].second + " " + std::to_string(m_hitTargets[i].first);
+                for (uint32 i = 0; i < pTargets->size(); i++)
+                {
+                    if (i > 0)
+                        txt += ", ";
+                    txt += FormatObjectName((*pTargets)[i]);
+                }
             }
         }
         
@@ -862,6 +868,34 @@ struct SniffedEvent_ItemUse : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_CLIENT_ITEM_USE;
+    }
+};
+
+struct SniffedEvent_ReclaimCorpse : SniffedEvent
+{
+    SniffedEvent_ReclaimCorpse() {};
+    std::string ToString(bool /*singleLine*/) const final
+    {
+        std::string txt = "Client reclaims his corpse.";
+        return txt;
+    }
+    SniffedEventType GetType() const final
+    {
+        return SE_CLIENT_RECLAIM_CORPSE;
+    }
+};
+
+struct SniffedEvent_ReleaseSpirit : SniffedEvent
+{
+    SniffedEvent_ReleaseSpirit() {};
+    std::string ToString(bool /*singleLine*/) const final
+    {
+        std::string txt = "Client releases his spirit.";
+        return txt;
+    }
+    SniffedEventType GetType() const final
+    {
+        return SE_CLIENT_RELEASE_SPIRIT;
     }
 };
 

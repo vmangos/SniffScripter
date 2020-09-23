@@ -14,6 +14,8 @@ struct CreatureText
     std::string comment;
 };
 
+struct KnownObject;
+
 class SniffDatabase
 {
 public:
@@ -22,15 +24,18 @@ public:
     static void LoadCreatureTextTemplate();
     static void LoadCreatureSpawns();
     static void LoadGameObjectSpawns();
+    static void LoadPlayerNames();
     static void LoadSniffDatabase()
     {
         LoadCreatureTextTemplate();
         LoadCreatureSpawns();
         LoadGameObjectSpawns();
+        LoadPlayerNames();
     }
 
     static void LoadSpellCastStart(char const* whereClause);
     static void LoadSpellCastGo(char const* whereClause);
+    static void LoadSpellCastGoHitTargets();
     static void LoadPlaySound(char const* whereClause);
     static void LoadPlayMusic(char const* whereClause);
     template <class T>
@@ -53,6 +58,8 @@ public:
     static void LoadCreatureInteractTimes(char const* whereClause);
     static void LoadGameObjectUseTimes(char const* whereClause);
     static void LoadItemUseTimes(char const* whereClause);
+    static void LoadClientReclaimCorpse(char const* whereClause);
+    static void LoadClientReleaseSpirit(char const* whereClause);
 
     static CreatureText const* GetCreatureTextTemplate(uint32 creatureId, uint32 groupId)
     {
@@ -63,6 +70,20 @@ public:
         }
         return nullptr;
     }
+    static std::vector<KnownObject>* GetSpellGoHitTargets(uint32 listId)
+    {
+        auto const itr = m_spellGoHitTargets.find(listId);
+        if (itr != m_spellGoHitTargets.end())
+            return &itr->second;
+        return nullptr;
+    }
+    static std::string GetPlayerName(uint32 guid)
+    {
+        auto const itr = m_playerNames.find(guid);
+        if (itr != m_playerNames.cend())
+            return itr->second;
+        return "UNKNOWN";
+    }
 
     static uint32 GetCreatureFieldValueBeforeTime(uint32 guid, uint32 unixtime, char const* fieldName);
 
@@ -72,6 +93,8 @@ private:
     static std::vector<CreatureText> m_creatureTextTemplates;
     static std::map<uint32, uint32> m_creatureGuidToEntry;
     static std::map<uint32, uint32> m_gameObjectGuidToEntry;
+    static std::map<uint32, std::vector<KnownObject>> m_spellGoHitTargets;
+    static std::map<uint32, std::string> m_playerNames;
 };
 
 #endif

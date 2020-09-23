@@ -74,9 +74,29 @@ void SniffDatabase::LoadGameObjectSpawns()
     }
 }
 
+std::map<uint32, std::string> SniffDatabase::m_playerNames;
+
+void SniffDatabase::LoadPlayerNames()
+{
+    printf("Loading characters database.\n");
+    //                                                              0       1
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `name` FROM `%s`.`characters`", m_databaseName.c_str()))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 guid = pFields[0].getUInt32();
+            std::string name = pFields[1].getCppString();
+
+            m_playerNames[guid] = name;
+        } while (result->NextRow());
+    }
+}
+
 void SniffDatabase::LoadSpellCastStart(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `UnixTime`, `CasterGuid`, `CasterId`, `CasterType`, `SpellId`, `TargetGuid`, `TargetId`, `TargetType` FROM `%s`.`spell_cast_start` WHERE %s ORDER BY `UnixTime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `caster_guid`, `caster_id`, `caster_type`, `spell_id`, `target_guid`, `target_id`, `target_type` FROM `%s`.`spell_cast_start` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -98,9 +118,36 @@ void SniffDatabase::LoadSpellCastStart(char const* whereClause)
     }
 }
 
+std::map<uint32, std::vector<KnownObject>> SniffDatabase::m_spellGoHitTargets;
+
+void SniffDatabase::LoadSpellCastGoHitTargets()
+{
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `list_id`, `target_guid`, `target_id`, `target_type` FROM `%s`.`spell_cast_go_target` ORDER BY `list_id`", SniffDatabase::m_databaseName.c_str()))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 listId = pFields[0].getUInt32();
+            KnownObject target;
+            target.m_guid = pFields[1].getUInt32();
+            target.m_entry = pFields[2].getUInt32();
+            target.m_type = pFields[3].getCppString();
+            m_spellGoHitTargets[listId].push_back(target);
+
+        } while (result->NextRow());
+    }
+}
+
 void SniffDatabase::LoadSpellCastGo(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `UnixTime`, `CasterGuid`, `CasterId`, `CasterType`, `SpellId`, `MainTargetGuid`, `MainTargetId`, `MainTargetType`, `HitTargetsCount`, `HitTargetId1`, `HitTargetType1`, `HitTargetId2`, `HitTargetType2`, `HitTargetId3`, `HitTargetType3`, `HitTargetId4`, `HitTargetType4`, `HitTargetId5`, `HitTargetType5`, `HitTargetId6`, `HitTargetType6`, `HitTargetId7`, `HitTargetType7`, `HitTargetId8`, `HitTargetType8` FROM `%s`.`spell_cast_go` WHERE %s ORDER BY `UnixTime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    static bool loadedTargets = false;
+    if (!loadedTargets)
+    {
+        LoadSpellCastGoHitTargets();
+        loadedTargets = true;
+    }
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `caster_guid`, `caster_id`, `caster_type`, `spell_id`, `main_target_guid`, `main_target_id`, `main_target_type`, `hit_targets_count`, `hit_targets_list_id` FROM `%s`.`spell_cast_go` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -115,17 +162,9 @@ void SniffDatabase::LoadSpellCastGo(char const* whereClause)
             uint32 targetId = pFields[6].getUInt32();
             std::string targetType = pFields[7].getCppString();
             uint32 hitTargetsCount = pFields[8].getUInt32();
+            uint32 hitTargetsListId = pFields[9].getUInt32();
 
-            std::vector<std::pair<uint32, std::string>> vHitTargets;
-            for (uint32 i = 0; i < 7; i++)
-            {
-                uint32 id = pFields[9 + (i * 2)].getUInt32();
-                std::string type = pFields[10 + (i * 2)].getCppString();
-                if (type != "")
-                    vHitTargets.push_back(std::make_pair(id, type));
-            }
-
-            std::shared_ptr<SniffedEvent_SpellCastGo> newEvent = std::make_shared<SniffedEvent_SpellCastGo>(spellId, casterGuid, casterId, casterType, targetGuid, targetId, targetType, hitTargetsCount, vHitTargets);
+            std::shared_ptr<SniffedEvent_SpellCastGo> newEvent = std::make_shared<SniffedEvent_SpellCastGo>(spellId, casterGuid, casterId, casterType, targetGuid, targetId, targetType, hitTargetsCount, hitTargetsListId);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
 
         } while (result->NextRow());
@@ -162,7 +201,7 @@ void SniffDatabase::LoadPlayMusic(char const* whereClause)
             DbField* pFields = result->fetchCurrentRow();
 
             uint32 unixtime = pFields[0].getUInt32();
-            uint32 musicId = pFields[0].getUInt32();
+            uint32 musicId = pFields[1].getUInt32();
 
             std::shared_ptr<SniffedEvent_PlayMusic> newEvent = std::make_shared<SniffedEvent_PlayMusic>(musicId);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
@@ -564,6 +603,40 @@ void SniffDatabase::LoadItemUseTimes(char const* whereClause)
             uint32 entry = pFields[1].getUInt32();
 
             std::shared_ptr<SniffedEvent_ItemUse> newEvent = std::make_shared<SniffedEvent_ItemUse>(entry);
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+
+        } while (result->NextRow());
+    }
+}
+
+void SniffDatabase::LoadClientReclaimCorpse(char const* whereClause)
+{
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime` FROM `%s`.`client_reclaim_corpse` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 unixtime = pFields[0].getUInt32();
+
+            std::shared_ptr<SniffedEvent_ReclaimCorpse> newEvent = std::make_shared<SniffedEvent_ReclaimCorpse>();
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+
+        } while (result->NextRow());
+    }
+}
+
+void SniffDatabase::LoadClientReleaseSpirit(char const* whereClause)
+{
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime` FROM `%s`.`client_release_spirit` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 unixtime = pFields[0].getUInt32();
+
+            std::shared_ptr<SniffedEvent_ReleaseSpirit> newEvent = std::make_shared<SniffedEvent_ReleaseSpirit>();
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
 
         } while (result->NextRow());
