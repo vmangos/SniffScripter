@@ -58,6 +58,8 @@ enum
     OPTION_TIMELINE_WAYPOINTS       = 3,
     OPTION_GENERATE_SCRIPT          = 4,
     OPTION_QUESTS_WITH_RP_EVENTS    = 5,
+    OPTION_BREAKDOWN_NPC_FLAGS      = 6,
+    OPTION_BREAKDOWN_UNIT_FLAGS     = 7,
 };
 
 int main()
@@ -82,7 +84,8 @@ int main()
     printf("3. Create waypoints and show events as comments\n");
     printf("4. Create database script from selected events\n");
     printf("5. List quests with RP events\n");
-
+    printf("6. Breakdown NPC Flags\n");
+    printf("7. Breakdown Unit Flags\n");
     printf("> ");
 
     uint32 option = GetUInt32();
@@ -298,6 +301,22 @@ int main()
                 return 0;
             }
         }
+    }
+    else if (option == OPTION_BREAKDOWN_NPC_FLAGS)
+    {
+        printf("NPC Flags: ");
+        uint32 flags = GetUInt32();
+        std::string flagNames = GetNpcFlagNames(flags);
+        printf(flagNames.c_str());
+        GetChar();
+    }
+    else if (option == OPTION_BREAKDOWN_UNIT_FLAGS)
+    {
+        printf("Unit Flags: ");
+        uint32 flags = GetUInt32();
+        std::string flagNames = GetUnitFlagNames(flags);
+        printf(flagNames.c_str());
+        GetChar();
     }
 
     GetChar();

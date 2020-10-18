@@ -221,7 +221,7 @@ template void SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entr
 template <class T>
 void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `%s` FROM `%s`.`creature_update` WHERE %s && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), whereClause, fieldName))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `%s` FROM `%s`.`creature_values_update` WHERE %s && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), whereClause, fieldName))
     {
         do
         {
@@ -493,7 +493,7 @@ template void SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_
 template <class T>
 void SniffDatabase::LoadGameObjectUpdate(char const* fieldName, char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `%s` FROM `%s`.`gameobject_update` WHERE %s && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), whereClause, fieldName))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `%s` FROM `%s`.`gameobject_values_update` WHERE %s && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), whereClause, fieldName))
     {
         do
         {
@@ -657,7 +657,7 @@ uint32 SniffDatabase::GetCreatureFieldValueBeforeTime(uint32 guid, uint32 unixti
         } while (result->NextRow());
     }
 
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `%s` FROM `%s`.`creature_update` WHERE (`guid` = %u) && (`unixtime` < %u) && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), guid, unixtime, fieldName))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `%s` FROM `%s`.`creature_values_update` WHERE (`guid` = %u) && (`unixtime` < %u) && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), guid, unixtime, fieldName))
     {
         do
         {
