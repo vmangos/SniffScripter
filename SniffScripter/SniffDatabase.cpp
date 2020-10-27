@@ -14,8 +14,8 @@ std::vector<CreatureText> SniffDatabase::m_creatureTextTemplates;
 void SniffDatabase::LoadCreatureTextTemplate()
 {
     printf("Loading creature text database.\n");
-    //                                                              0             1          2       3       4
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `CreatureID`, `GroupID`, `Text`, `Type`, `Comment` FROM `%s`.`creature_text_template`", m_databaseName.c_str()))
+    //                                                              0              1           2       3            4
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `creature_id`, `group_id`, `text`, `chat_type`, `comment` FROM `%s`.`creature_text_template`", m_databaseName.c_str()))
     {
         do
         {
@@ -96,13 +96,13 @@ void SniffDatabase::LoadPlayerNames()
 
 void SniffDatabase::LoadSpellCastStart(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `caster_guid`, `caster_id`, `caster_type`, `spell_id`, `target_guid`, `target_id`, `target_type` FROM `%s`.`spell_cast_start` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `caster_guid`, `caster_id`, `caster_type`, `spell_id`, `target_guid`, `target_id`, `target_type` FROM `%s`.`spell_cast_start` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 casterGuid = pFields[1].getUInt32();
             uint32 casterId = pFields[2].getUInt32();
             std::string casterType = pFields[3].getCppString();
@@ -112,7 +112,7 @@ void SniffDatabase::LoadSpellCastStart(char const* whereClause)
             std::string targetType = pFields[7].getCppString();
 
             std::shared_ptr<SniffedEvent_SpellCastStart> newEvent = std::make_shared<SniffedEvent_SpellCastStart>(spellId, casterGuid, casterId, casterType, targetGuid, targetId, targetType);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -147,13 +147,13 @@ void SniffDatabase::LoadSpellCastGo(char const* whereClause)
         LoadSpellCastGoHitTargets();
         loadedTargets = true;
     }
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `caster_guid`, `caster_id`, `caster_type`, `spell_id`, `main_target_guid`, `main_target_id`, `main_target_type`, `hit_targets_count`, `hit_targets_list_id` FROM `%s`.`spell_cast_go` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `caster_guid`, `caster_id`, `caster_type`, `spell_id`, `main_target_guid`, `main_target_id`, `main_target_type`, `hit_targets_count`, `hit_targets_list_id` FROM `%s`.`spell_cast_go` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 casterGuid = pFields[1].getUInt32();
             uint32 casterId = pFields[2].getUInt32();
             std::string casterType = pFields[3].getCppString();
@@ -165,7 +165,7 @@ void SniffDatabase::LoadSpellCastGo(char const* whereClause)
             uint32 hitTargetsListId = pFields[9].getUInt32();
 
             std::shared_ptr<SniffedEvent_SpellCastGo> newEvent = std::make_shared<SniffedEvent_SpellCastGo>(spellId, casterGuid, casterId, casterType, targetGuid, targetId, targetType, hitTargetsCount, hitTargetsListId);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -173,20 +173,20 @@ void SniffDatabase::LoadSpellCastGo(char const* whereClause)
 
 void SniffDatabase::LoadPlaySound(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `sound`, `source_guid`, `source_id`, `source_type` FROM `%s`.`play_sound` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `sound`, `source_guid`, `source_id`, `source_type` FROM `%s`.`play_sound` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 soundId = pFields[1].getUInt32();
             uint32 sourceGuid = pFields[2].getUInt32();
             uint32 sourceId = pFields[3].getUInt32();
             std::string sourceType = pFields[4].getCppString();
 
             std::shared_ptr<SniffedEvent_PlaySound> newEvent = std::make_shared<SniffedEvent_PlaySound>(soundId, sourceGuid, sourceId, sourceType);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -194,17 +194,17 @@ void SniffDatabase::LoadPlaySound(char const* whereClause)
 
 void SniffDatabase::LoadPlayMusic(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `music` FROM `%s`.`play_music` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `music` FROM `%s`.`play_music` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 musicId = pFields[1].getUInt32();
 
             std::shared_ptr<SniffedEvent_PlayMusic> newEvent = std::make_shared<SniffedEvent_PlayMusic>(musicId);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -221,7 +221,7 @@ template void SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entr
 template <class T>
 void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `%s` FROM `%s`.`creature_values_update` WHERE %s && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), whereClause, fieldName))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtimems`, `%s` FROM `%s`.`creature_values_update` WHERE %s && (`%s` IS NOT NULL) ORDER BY `unixtimems`", fieldName, SniffDatabase::m_databaseName.c_str(), whereClause, fieldName))
     {
         do
         {
@@ -229,11 +229,11 @@ void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereC
 
             uint32 guid = pFields[0].getUInt32();;
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
-            uint32 unixtime = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[1].getUInt64();
             uint32 value = pFields[2].getUInt32();
 
             std::shared_ptr<T> newEvent = std::make_shared<T>(guid, creatureId, value);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -241,13 +241,13 @@ void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereC
 
 void SniffDatabase::LoadCreatureText(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `UnixTime`, `CreatureGuid`, `CreatureID`, `GroupID` FROM `%s`.`creature_text` WHERE %s ORDER BY `UnixTime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `guid`, `creature_id`, `group_id` FROM `%s`.`creature_text` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 creatureGuid = pFields[1].getUInt32();
             uint32 creatureId = pFields[2].getUInt32();
             uint32 groupId = pFields[3].getUInt32();
@@ -258,7 +258,7 @@ void SniffDatabase::LoadCreatureText(char const* whereClause)
             std::string comment = textEntry ? textEntry->comment : "<error>";
 
             std::shared_ptr<SniffedEvent_CreatureText> newEvent = std::make_shared<SniffedEvent_CreatureText>(creatureGuid, creatureId, text, chatType, comment);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -283,10 +283,10 @@ void SniffDatabase::LoadCreatureMovement(char const* whereClause)
             float endY = pFields[7].getFloat();
             float endZ = pFields[8].getFloat();
             float orientation = pFields[9].getFloat();
-            uint32 unixtime = pFields[10].getUInt32();
+            uint64 unixtime = pFields[10].getUInt32();
 
             std::shared_ptr<SniffedEvent_CreatureMovement> newEvent = std::make_shared<SniffedEvent_CreatureMovement>(guid, creatureId, point, moveTime, startX, startY, startZ, endX, endY, endZ, orientation);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime*1000, newEvent));
 
         } while (result->NextRow());
     }
@@ -294,20 +294,20 @@ void SniffDatabase::LoadCreatureMovement(char const* whereClause)
 
 void SniffDatabase::LoadCreatureEmote(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `emote_id`, `emote_name`, `guid` FROM `%s`.`creature_emote` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `emote_id`, `emote_name`, `guid` FROM `%s`.`creature_emote` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 emoteId = pFields[1].getUInt32();
             std::string emoteName = pFields[2].getCppString();
             uint32 guid = pFields[3].getUInt32();
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
 
             std::shared_ptr<SniffedEvent_CreatureEmote> newEvent = std::make_shared<SniffedEvent_CreatureEmote>(guid, creatureId, emoteId, emoteName);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -315,13 +315,13 @@ void SniffDatabase::LoadCreatureEmote(char const* whereClause)
 
 void SniffDatabase::LoadCreatureAttackStart(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `victim_guid`, `victim_id`, `victim_type`, `guid` FROM `%s`.`creature_attack_start` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `victim_guid`, `victim_id`, `victim_type`, `guid` FROM `%s`.`creature_attack_start` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 victimGuid = pFields[1].getUInt32();
             uint32 victimId = pFields[2].getUInt32();
             std::string victimType = pFields[3].getCppString();
@@ -329,7 +329,7 @@ void SniffDatabase::LoadCreatureAttackStart(char const* whereClause)
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
 
             std::shared_ptr<SniffedEvent_CreatureAttackStart> newEvent = std::make_shared<SniffedEvent_CreatureAttackStart>(guid, creatureId, victimGuid, victimId, victimType);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -337,13 +337,13 @@ void SniffDatabase::LoadCreatureAttackStart(char const* whereClause)
 
 void SniffDatabase::LoadCreatureAttackStop(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `victim_guid`, `victim_id`, `victim_type`, `guid` FROM `%s`.`creature_attack_stop` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `victim_guid`, `victim_id`, `victim_type`, `guid` FROM `%s`.`creature_attack_stop` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 victimGuid = pFields[1].getUInt32();
             uint32 victimId = pFields[2].getUInt32();
             std::string victimType = pFields[3].getCppString();
@@ -351,7 +351,7 @@ void SniffDatabase::LoadCreatureAttackStop(char const* whereClause)
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
 
             std::shared_ptr<SniffedEvent_CreatureAttackStop> newEvent = std::make_shared<SniffedEvent_CreatureAttackStop>(guid, creatureId, victimGuid, victimId, victimType);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -359,7 +359,7 @@ void SniffDatabase::LoadCreatureAttackStop(char const* whereClause)
 
 void SniffDatabase::LoadCreatureDestroy(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime` FROM `%s`.`creature_destroy_time` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtimems` FROM `%s`.`creature_destroy_time` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -367,10 +367,10 @@ void SniffDatabase::LoadCreatureDestroy(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
-            uint32 unixtime = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[1].getUInt64();
 
             std::shared_ptr<SniffedEvent_CreatureDestroy> newEvent = std::make_shared<SniffedEvent_CreatureDestroy>(guid, creatureId);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -378,7 +378,7 @@ void SniffDatabase::LoadCreatureDestroy(char const* whereClause)
 
 void SniffDatabase::LoadCreatureCreate2(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `position_x`, `position_y`, `position_z`, `orientation` FROM `%s`.`creature_create2_time` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtimems`, `position_x`, `position_y`, `position_z`, `orientation` FROM `%s`.`creature_create2_time` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -386,14 +386,14 @@ void SniffDatabase::LoadCreatureCreate2(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
-            uint32 unixtime = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[1].getUInt64();
             float position_x = pFields[2].getFloat();
             float position_y = pFields[3].getFloat();
             float position_z = pFields[4].getFloat();
             float orientation = pFields[5].getFloat();
 
             std::shared_ptr<SniffedEvent_CreatureCreate2> newEvent = std::make_shared<SniffedEvent_CreatureCreate2>(guid, creatureId, position_x, position_y, position_z, orientation);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -401,7 +401,7 @@ void SniffDatabase::LoadCreatureCreate2(char const* whereClause)
 
 void SniffDatabase::LoadCreatureCreate1(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `position_x`, `position_y`, `position_z`, `orientation` FROM `%s`.`creature_create1_time` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtimems`, `position_x`, `position_y`, `position_z`, `orientation` FROM `%s`.`creature_create1_time` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -409,14 +409,14 @@ void SniffDatabase::LoadCreatureCreate1(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 creatureId = GetCreatureEntryFromGuid(guid);
-            uint32 unixtime = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[1].getUInt64();
             float position_x = pFields[2].getFloat();
             float position_y = pFields[3].getFloat();
             float position_z = pFields[4].getFloat();
             float orientation = pFields[5].getFloat();
 
             std::shared_ptr<SniffedEvent_CreatureCreate1> newEvent = std::make_shared<SniffedEvent_CreatureCreate1>(guid, creatureId, position_x, position_y, position_z, orientation);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -424,7 +424,7 @@ void SniffDatabase::LoadCreatureCreate1(char const* whereClause)
 
 void SniffDatabase::LoadGameObjectDestroy(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime` FROM `%s`.`gameobject_destroy_time` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtimems` FROM `%s`.`gameobject_destroy_time` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -432,10 +432,10 @@ void SniffDatabase::LoadGameObjectDestroy(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 entry = GetGameObjectEntryFromGuid(guid);
-            uint32 unixtime = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[1].getUInt64();
 
             std::shared_ptr<SniffedEvent_GameObjectDestroy> newEvent = std::make_shared<SniffedEvent_GameObjectDestroy>(guid, entry);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -443,7 +443,7 @@ void SniffDatabase::LoadGameObjectDestroy(char const* whereClause)
 
 void SniffDatabase::LoadGameObjectCreate2(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `position_x`, `position_y`, `position_z`, `orientation` FROM `%s`.`gameobject_create2_time` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtimems`, `position_x`, `position_y`, `position_z`, `orientation` FROM `%s`.`gameobject_create2_time` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -451,14 +451,14 @@ void SniffDatabase::LoadGameObjectCreate2(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 entry = GetGameObjectEntryFromGuid(guid);
-            uint32 unixtime = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[1].getUInt64();
             float position_x = pFields[2].getFloat();
             float position_y = pFields[3].getFloat();
             float position_z = pFields[4].getFloat();
             float orientation = pFields[5].getFloat();
 
             std::shared_ptr<SniffedEvent_GameObjectCreate2> newEvent = std::make_shared<SniffedEvent_GameObjectCreate2>(guid, entry, position_x, position_y, position_z, orientation);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -466,7 +466,7 @@ void SniffDatabase::LoadGameObjectCreate2(char const* whereClause)
 
 void SniffDatabase::LoadGameObjectCreate1(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `position_x`, `position_y`, `position_z`, `orientation` FROM `%s`.`gameobject_create1_time` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtimems`, `position_x`, `position_y`, `position_z`, `orientation` FROM `%s`.`gameobject_create1_time` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -474,14 +474,14 @@ void SniffDatabase::LoadGameObjectCreate1(char const* whereClause)
 
             uint32 guid = pFields[0].getUInt32();
             uint32 entry = GetGameObjectEntryFromGuid(guid);
-            uint32 unixtime = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[1].getUInt64();
             float position_x = pFields[2].getFloat();
             float position_y = pFields[3].getFloat();
             float position_z = pFields[4].getFloat();
             float orientation = pFields[5].getFloat();
 
             std::shared_ptr<SniffedEvent_GameObjectCreate1> newEvent = std::make_shared<SniffedEvent_GameObjectCreate1>(guid, entry, position_x, position_y, position_z, orientation);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -493,7 +493,7 @@ template void SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_
 template <class T>
 void SniffDatabase::LoadGameObjectUpdate(char const* fieldName, char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtime`, `%s` FROM `%s`.`gameobject_values_update` WHERE %s && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), whereClause, fieldName))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `unixtimems`, `%s` FROM `%s`.`gameobject_values_update` WHERE %s && (`%s` IS NOT NULL) ORDER BY `unixtimems`", fieldName, SniffDatabase::m_databaseName.c_str(), whereClause, fieldName))
     {
         do
         {
@@ -501,11 +501,11 @@ void SniffDatabase::LoadGameObjectUpdate(char const* fieldName, char const* wher
 
             uint32 guid = pFields[0].getUInt32();;
             uint32 entry = GetGameObjectEntryFromGuid(guid);
-            uint32 unixtime = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[1].getUInt64();
             uint32 value = pFields[2].getUInt32();
 
             std::shared_ptr<T> newEvent = std::make_shared<T>(guid, entry, value);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -513,20 +513,20 @@ void SniffDatabase::LoadGameObjectUpdate(char const* fieldName, char const* wher
 
 void SniffDatabase::LoadQuestAcceptTimes(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `object_guid`, `object_id`, `object_type`, `quest_id` FROM `%s`.`quest_client_accept` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `object_guid`, `object_id`, `object_type`, `quest_id` FROM `%s`.`quest_client_accept` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 objectGuid = pFields[1].getUInt32();
             uint32 objectId = pFields[2].getUInt32();
             std::string objectType = pFields[3].getCppString();
             uint32 questId = pFields[4].getUInt32();
 
             std::shared_ptr<SniffedEvent_QuestAccept> newEvent = std::make_shared<SniffedEvent_QuestAccept>(questId, objectGuid, objectId, objectType);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -534,20 +534,20 @@ void SniffDatabase::LoadQuestAcceptTimes(char const* whereClause)
 
 void SniffDatabase::LoadQuestCompleteTimes(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `object_guid`, `object_id`, `object_type`, `quest_id` FROM `%s`.`quest_client_complete` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `object_guid`, `object_id`, `object_type`, `quest_id` FROM `%s`.`quest_client_complete` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 objectGuid = pFields[1].getUInt32();
             uint32 objectId = pFields[2].getUInt32();
             std::string objectType = pFields[3].getCppString();
             uint32 questId = pFields[4].getUInt32();
 
             std::shared_ptr<SniffedEvent_QuestComplete> newEvent = std::make_shared<SniffedEvent_QuestComplete>(questId, objectGuid, objectId, objectType);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -555,18 +555,18 @@ void SniffDatabase::LoadQuestCompleteTimes(char const* whereClause)
 
 void SniffDatabase::LoadCreatureInteractTimes(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `guid` FROM `%s`.`creature_client_interact` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `guid` FROM `%s`.`creature_client_interact` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 guid = pFields[1].getUInt32();
             uint32 entry = GetCreatureEntryFromGuid(guid);
 
             std::shared_ptr<SniffedEvent_CreatureInteract> newEvent = std::make_shared<SniffedEvent_CreatureInteract>(guid, entry);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -574,18 +574,18 @@ void SniffDatabase::LoadCreatureInteractTimes(char const* whereClause)
 
 void SniffDatabase::LoadGameObjectUseTimes(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `guid` FROM `%s`.`gameobject_client_use` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `guid` FROM `%s`.`gameobject_client_use` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 guid = pFields[1].getUInt32();
             uint32 entry = GetGameObjectEntryFromGuid(guid);
 
             std::shared_ptr<SniffedEvent_GameObjectUse> newEvent = std::make_shared<SniffedEvent_GameObjectUse>(guid, entry);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -593,17 +593,17 @@ void SniffDatabase::LoadGameObjectUseTimes(char const* whereClause)
 
 void SniffDatabase::LoadItemUseTimes(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime`, `entry` FROM `%s`.`item_client_use` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `entry` FROM `%s`.`item_client_use` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
             uint32 entry = pFields[1].getUInt32();
 
             std::shared_ptr<SniffedEvent_ItemUse> newEvent = std::make_shared<SniffedEvent_ItemUse>(entry);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -611,16 +611,16 @@ void SniffDatabase::LoadItemUseTimes(char const* whereClause)
 
 void SniffDatabase::LoadClientReclaimCorpse(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime` FROM `%s`.`client_reclaim_corpse` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems` FROM `%s`.`client_reclaim_corpse` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
 
             std::shared_ptr<SniffedEvent_ReclaimCorpse> newEvent = std::make_shared<SniffedEvent_ReclaimCorpse>();
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -628,22 +628,22 @@ void SniffDatabase::LoadClientReclaimCorpse(char const* whereClause)
 
 void SniffDatabase::LoadClientReleaseSpirit(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtime` FROM `%s`.`client_release_spirit` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems` FROM `%s`.`client_release_spirit` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
             DbField* pFields = result->fetchCurrentRow();
 
-            uint32 unixtime = pFields[0].getUInt32();
+            uint64 unixtimems = pFields[0].getUInt64();
 
             std::shared_ptr<SniffedEvent_ReleaseSpirit> newEvent = std::make_shared<SniffedEvent_ReleaseSpirit>();
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
 }
 
-uint32 SniffDatabase::GetCreatureFieldValueBeforeTime(uint32 guid, uint32 unixtime, char const* fieldName)
+uint32 SniffDatabase::GetCreatureFieldValueBeforeTime(uint32 guid, uint64 unixtimems, char const* fieldName)
 {
     uint32 field = 0;
     if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `%s` FROM `%s`.`creature` WHERE `guid`=%u", fieldName, SniffDatabase::m_databaseName.c_str(), guid))
@@ -657,7 +657,7 @@ uint32 SniffDatabase::GetCreatureFieldValueBeforeTime(uint32 guid, uint32 unixti
         } while (result->NextRow());
     }
 
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `%s` FROM `%s`.`creature_values_update` WHERE (`guid` = %u) && (`unixtime` < %u) && (`%s` IS NOT NULL) ORDER BY `unixtime`", fieldName, SniffDatabase::m_databaseName.c_str(), guid, unixtime, fieldName))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `%s` FROM `%s`.`creature_values_update` WHERE (`guid` = %u) && (`unixtimems` < %llu) && (`%s` IS NOT NULL) ORDER BY `unixtimems`", fieldName, SniffDatabase::m_databaseName.c_str(), guid, unixtimems, fieldName))
     {
         do
         {

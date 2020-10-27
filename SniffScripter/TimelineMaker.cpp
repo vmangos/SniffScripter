@@ -11,7 +11,7 @@
 #include "Database\Database.h"
 
 extern Database GameDb;
-std::multimap<uint32, std::shared_ptr<SniffedEvent>> TimelineMaker::m_eventsMap;
+std::multimap<uint64, std::shared_ptr<SniffedEvent>> TimelineMaker::m_eventsMap;
 
 void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint32>& vCreatureGuids, std::vector<uint32> vGameObjectGuids, bool showReclaimCorpse, bool showReleaseSpirit, bool showQuests, bool showCreatureInteract, bool showGameObjectUse, bool showItemUse, bool showAttacks, bool showTexts, bool showEmotes, bool showMoves, bool showUpdates, bool showCasts, bool showSounds)
 {
@@ -21,20 +21,20 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadCreatureCreate1(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadCreatureCreate2(whereClause);
         }
 
         if (!showCreatureInteract)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadCreatureInteractTimes(whereClause);
         }
 
@@ -42,13 +42,13 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
         {
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureAttackStart(whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureAttackStop(whereClause);
             }
         }
@@ -56,14 +56,14 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
         if (showTexts)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`CreatureGuid` = %u) && (`UnixTime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadCreatureText(whereClause);
         }
 
         if (showEmotes)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadCreatureEmote(whereClause);
         }
 
@@ -78,43 +78,43 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
         {
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entry>("entry", whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_display_id>("display_id", whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_faction>("faction", whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_emote_state>("emote_state", whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_stand_state>("stand_state", whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
             }
         }
@@ -123,32 +123,32 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
         {
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
+                SniffDatabase::LoadSpellCastStart(whereClause);
+            }
+
+            {
+                char whereClause[256] = {};
+                snprintf(whereClause, 255, "(`caster_guid` != %u) && (`target_guid` = %u) && (`target_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, guid, uiStartTime);
                 SniffDatabase::LoadSpellCastStart(whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` != %u) && (`target_guid` = %u) && (`target_type` = 'Creature') && (`unixtime` >= %u)", guid, guid, uiStartTime);
-                SniffDatabase::LoadSpellCastStart(whereClause);
-            }
-
-            {
-                char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadSpellCastGo(whereClause);
             }
 
             {
-                char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` != %u) && (`main_target_guid` = %u) && (`main_target_type` = 'Creature') && (`unixtime` >= %u)", guid, guid, uiStartTime);
+                char whereClause[256] = {};
+                snprintf(whereClause, 255, "(`caster_guid` != %u) && (`main_target_guid` = %u) && (`main_target_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, guid, uiStartTime);
                 SniffDatabase::LoadSpellCastGo(whereClause);
             }
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadCreatureDestroy(whereClause);
         }
     }
@@ -159,20 +159,20 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadGameObjectCreate1(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadGameObjectCreate2(whereClause);
         }
 
         if (!showGameObjectUse)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadGameObjectUseTimes(whereClause);
         }
 
@@ -180,13 +180,13 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
         {
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_flags>("flags", whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
             }
         }
@@ -195,49 +195,49 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
         {
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'GameObject') && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'GameObject') && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
+                SniffDatabase::LoadSpellCastStart(whereClause);
+            }
+
+            {
+                char whereClause[256] = {};
+                snprintf(whereClause, 255, "(`caster_guid` != %u) && (`target_guid` = %u) && (`target_type` = 'GameObject') && (`unixtimems` >= (%u * 1000))", guid, guid, uiStartTime);
                 SniffDatabase::LoadSpellCastStart(whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` != %u) && (`target_guid` = %u) && (`target_type` = 'GameObject') && (`unixtime` >= %u)", guid, guid, uiStartTime);
-                SniffDatabase::LoadSpellCastStart(whereClause);
-            }
-
-            {
-                char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'GameObject') && (`unixtime` >= %u)", guid, uiStartTime);
+                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'GameObject') && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadSpellCastGo(whereClause);
             }
 
             {
-                char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` != %u) && (`main_target_guid` = %u) && (`main_target_type` = 'GameObject') && (`unixtime` >= %u)", guid, guid, uiStartTime);
+                char whereClause[256] = {};
+                snprintf(whereClause, 255, "(`caster_guid` != %u) && (`main_target_guid` = %u) && (`main_target_type` = 'GameObject') && (`unixtimems` >= (%u * 1000))", guid, guid, uiStartTime);
                 SniffDatabase::LoadSpellCastGo(whereClause);
             }
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, uiStartTime);
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
             SniffDatabase::LoadGameObjectDestroy(whereClause);
         }
     }
 
-    uint32 uiEndTime = !m_eventsMap.empty() ? m_eventsMap.rbegin()->first : UINT32_MAX;
+    uint32 uiEndTime = !m_eventsMap.empty() ? uint32(m_eventsMap.rbegin()->first / 1000) : UINT32_MAX;
 
     if (showSounds)
     {
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadPlayMusic(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadPlaySound(whereClause);
         }
     }
@@ -245,49 +245,49 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
     if (showReclaimCorpse)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadClientReclaimCorpse(whereClause);
     }
 
     if (showReleaseSpirit)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadClientReleaseSpirit(whereClause);
     }
 
     if (showQuests)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadQuestAcceptTimes(whereClause);
     }
 
     if (showQuests)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadQuestCompleteTimes(whereClause);
     }
 
     if (showItemUse)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadItemUseTimes(whereClause);
     }
 
     if (showCreatureInteract)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadCreatureInteractTimes(whereClause);
     }
 
     if (showGameObjectUse)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadGameObjectUseTimes(whereClause);
     }
 }
@@ -299,49 +299,49 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
     if (showReclaimCorpse)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadClientReclaimCorpse(whereClause);
     }
 
     if (showReleaseSpirit)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadClientReleaseSpirit(whereClause);
     }
 
     if (showGameObjectUse)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadGameObjectUseTimes(whereClause);
     }
 
     if (showCreatureInteract)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadCreatureInteractTimes(whereClause);
     }
 
     if (showUseItem)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadItemUseTimes(whereClause);
     }
 
     if (showQuests)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadQuestAcceptTimes(whereClause);
     }
 
     if (showQuests)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadQuestCompleteTimes(whereClause);
     }
 
@@ -351,41 +351,41 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
     {
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureCreate1(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureCreate2(whereClause);
         }
 
         if (showCreatureAttacks)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureAttackStart(whereClause);
         }
 
         if (showCreatureAttacks)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureAttackStop(whereClause);
         }
 
         if (showCreatureTexts)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`UnixTime` >= %u) && (`UnixTime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureText(whereClause);
         }
 
         if (showCreatureEmotes)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureEmote(whereClause);
         }
 
@@ -399,69 +399,69 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
         if (showCreatureCasts)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u) && (`caster_type`='Creature')", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000)) && (`caster_type`='Creature')", uiStartTime, uiEndTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
 
         if (showCreatureCasts)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u) && (`caster_type`='Creature')", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000)) && (`caster_type`='Creature')", uiStartTime, uiEndTime);
             SniffDatabase::LoadSpellCastGo(whereClause);
         }
 
         if (showCreatureUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entry>("entry", whereClause);
         }
 
         if (showCreatureUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_display_id>("display_id", whereClause);
         }
 
         if (showCreatureUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_faction>("faction", whereClause);
         }
 
         if (showCreatureUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_emote_state>("emote_state", whereClause);
         }
 
         if (showCreatureUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_stand_state>("stand_state", whereClause);
         }
 
         if (showCreatureUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
         }
 
         if (showCreatureUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureDestroy(whereClause);
         }
     }
@@ -473,47 +473,47 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
     {
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadGameObjectCreate1(whereClause);
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadGameObjectCreate2(whereClause);
         }
 
         if (showGameObjectCasts)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u) && (`caster_type`='GameObject')", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000)) && (`caster_type`='GameObject')", uiStartTime, uiEndTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
 
         if (showGameObjectCasts)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u) && (`caster_type`='GameObject')", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000)) && (`caster_type`='GameObject')", uiStartTime, uiEndTime);
             SniffDatabase::LoadSpellCastGo(whereClause);
         }
 
         if (showGameObjectUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_flags>("flags", whereClause);
         }
 
         if (showGameObjectUpdates)
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
         }
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
             SniffDatabase::LoadGameObjectDestroy(whereClause);
         }
     }
@@ -523,14 +523,14 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
     if (showSounds)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadPlayMusic(whereClause);
     }
 
     if (showSounds)
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
+        snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
         SniffDatabase::LoadPlaySound(whereClause);
     }
 }
@@ -551,23 +551,28 @@ void TimelineMaker::PromptTimelineSaveMethod(uint32 startTime)
 
 void TimelineMaker::PrintTimelineToScreen(uint32 startTime)
 {
-    uint32 lastEventTime = startTime;
+    uint64 lastEventTime = uint64(startTime)*1000;
     for (const auto& itr : m_eventsMap)
     {
-        uint32 timeDiff = itr.first - lastEventTime;
+        uint64 timeDiff = itr.first - lastEventTime;
         printf("\n\n----------------------\n");
-        printf("%u SECONDS LATER\n", timeDiff);
+        if (timeDiff < 1000)
+            printf("%llu MS LATER\n", timeDiff);
+        else
+            printf("%llu SECONDS LATER\n", timeDiff / 1000);
         printf("----------------------\n\n");
         printf("%s", itr.second->ToString(false).c_str());
         lastEventTime = itr.first;
     }
 }
 
-std::string GetTimeString(time_t eventTime)
+std::string GetTimeString(uint64 eventTime)
 {
-    struct tm* ptime = gmtime(&eventTime);
-    char buff[10];
-    snprintf(buff, sizeof(buff), "%02d:%02d:%02d", ptime->tm_hour, ptime->tm_min, ptime->tm_sec);
+    time_t eventUnixTime = eventTime / 1000;
+    uint32 milliseconds = eventTime % 1000;
+    struct tm* ptime = gmtime(&eventUnixTime);
+    char buff[13];
+    snprintf(buff, sizeof(buff), "%02d:%02d:%02d.%03d", ptime->tm_hour, ptime->tm_min, ptime->tm_sec, milliseconds);
     return std::string(buff);
 }
 
@@ -580,12 +585,16 @@ void TimelineMaker::SaveTimelineToFile(uint32 startTime)
     log << "Total events: " << m_eventsMap.size() << "\n";
     log << "Start time: " << startTime;
 
-    uint32 lastEventTime = startTime;
+    uint64 lastEventTime = startTime;
     for (const auto& itr : m_eventsMap)
     {
-        uint32 timeDiff = itr.first - lastEventTime;
+        uint64 timeDiff = itr.first - lastEventTime;
         log << "\n\n------------------------------\n";
-        log << timeDiff << " SECONDS LATER (" + GetTimeString(itr.first) + ")\n";
+        if (timeDiff < 1000)
+            log << timeDiff << " MS LATER";
+        else
+            log << (timeDiff / 1000) << " SECONDS LATER";
+        log << " (" << GetTimeString(itr.first) << ")\n";
         log << "------------------------------\n\n";
         log << itr.second->ToString(false);
         lastEventTime = itr.first;
@@ -723,7 +732,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
                 if (!comment.empty())
                     comment = "position seen before in points: " + comment;
                 std::shared_ptr<SniffedEvent_VmangosWaypoints> newEvent = std::make_shared<SniffedEvent_VmangosWaypoints>(id, pointCounter, start_position_x, start_position_y, start_position_z, orientation, waittime, 0.0f, 0, comment);
-                m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+                m_eventsMap.insert(std::make_pair(uint64(unixtime) * 1000, newEvent));
 
                 lastPoint = newEvent;
                 pointCounter++;
@@ -740,7 +749,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
                         float orientation = (i == splinesCount) ? final_orientation : 100.0f;
                         std::string comment = "spline " + std::to_string(i) + "/" + std::to_string(splinesCount);
                         std::shared_ptr<SniffedEvent_VmangosWaypoints> newEvent = std::make_shared<SniffedEvent_VmangosWaypoints>(id, pointCounter, spline.position_x, spline.position_y, spline.position_z, orientation, 0, 0.0f, 0, comment);
-                        m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+                        m_eventsMap.insert(std::make_pair(uint64(unixtime) * 1000, newEvent));
 
                         lastPoint = newEvent;
                         pointCounter++;
@@ -765,7 +774,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
                     }
                     
                     std::shared_ptr<SniffedEvent_VmangosWaypoints> newEvent = std::make_shared<SniffedEvent_VmangosWaypoints>(id, pointCounter, posX, posY, posZ, final_orientation, 0, 0.0f, 0, comment);
-                    m_eventsMap.insert(std::make_pair(unixtime, newEvent));
+                    m_eventsMap.insert(std::make_pair(uint64(unixtime) * 1000, newEvent));
 
                     lastPoint = newEvent;
                     pointCounter++;
@@ -780,91 +789,91 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureInteractTimes(whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureAttackStart(whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureAttackStop(whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureEmote(whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`CreatureGuid` = %u) && (`UnixTime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureText(whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_entry>("entry", whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_display_id>("display_id", whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_faction>("faction", whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_emote_state>("emote_state", whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_stand_state>("stand_state", whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadSpellCastStart(whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadSpellCastGo(whereClause);
     }
 
     {
         char whereClause[128] = {};
-        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u)", guid, firstMoveTime);
+        snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, firstMoveTime);
         SniffDatabase::LoadCreatureDestroy(whereClause);
     }
 }
@@ -887,7 +896,7 @@ uint32 TimelineMaker::SaveWaypointsToFile()
             totalWaypointRows++;
     }
 
-    uint32 lastEventTime = 0;
+    uint64 lastEventTime = 0;
     uint32 waypointRows = 0;
     for (const auto& itr : m_eventsMap)
     {
@@ -908,8 +917,9 @@ uint32 TimelineMaker::SaveWaypointsToFile()
             if (waypointRows == 0)
                 continue;
 
-            uint32 timeDiff = itr.first - lastEventTime;
-            log << "-- " << timeDiff << " SECONDS LATER: " << itr.second->ToString(true) << "\n";
+            uint64 timeDiff = itr.first - lastEventTime;
+            log << "-- " << timeDiff / 1000 << " SECONDS LATER: ";
+            log << itr.second->ToString(true) << "\n";
         }
 
         lastEventTime = itr.first;
@@ -955,14 +965,14 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
     {
         if (lastQuestEvent.type != QUEST_NONE)
         {
-            lastQuestEvent.duration = itr.first - lastQuestEvent.startTime;
+            lastQuestEvent.duration = uint32(itr.first / 1000) - lastQuestEvent.startTime;
             if (lastQuestEvent.duration = std::min(duration, lastQuestEvent.duration))
                 questsToCheck.push_back(lastQuestEvent);
         }
         if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_QuestAccept>(itr.second))
         {
             lastQuestEvent.questId = ptr->m_questId;
-            lastQuestEvent.startTime = itr.first;
+            lastQuestEvent.startTime = uint32(itr.first / 1000);
             lastQuestEvent.duration = duration;
             lastQuestEvent.type = QUEST_ACCEPT;
             lastQuestEvent.objectGuid = ptr->m_objectGuid;
@@ -971,7 +981,7 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
         else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_QuestComplete>(itr.second))
         {
             lastQuestEvent.questId = ptr->m_questId;
-            lastQuestEvent.startTime = itr.first;
+            lastQuestEvent.startTime = uint32(itr.first / 1000);
             lastQuestEvent.duration = duration;
             lastQuestEvent.type = QUEST_COMPLETE;
             lastQuestEvent.objectGuid = ptr->m_objectGuid;
@@ -994,12 +1004,12 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
 
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", startTime, endTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", startTime, endTime);
             SniffDatabase::LoadCreatureCreate2(whereClause);
         }
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", startTime, endTime);
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", startTime, endTime);
             SniffDatabase::LoadGameObjectCreate2(whereClause);
         }
 
@@ -1007,12 +1017,12 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
         {
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
                 SniffDatabase::LoadCreatureEmote(whereClause);
             }
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`CreatureGuid` = %u) && (`UnixTime` >= %u) && (`UnixTime` <= %u)", itr.objectGuid, startTime, endTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
                 SniffDatabase::LoadCreatureText(whereClause);
             }
             {
@@ -1022,7 +1032,7 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
             }
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_npc_flags>("npc_flags", whereClause);
             }
         }
@@ -1030,26 +1040,26 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
         {
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
                 SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_flags>("flags", whereClause);
             }
 
             {
                 char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtime` >= %u) && (`unixtime` <= %u)", itr.objectGuid, startTime, endTime);
+                snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
                 SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
             }
         }
         
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtime` >= %u) && (`unixtime`<= %u)", itr.objectGuid, startTime, endTime);
+            snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtime`<= %u)", itr.objectGuid, startTime, endTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
         
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtime` >= %u) && (`unixtime`<= %u)", itr.objectGuid, startTime, endTime);
+            snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtime`<= %u)", itr.objectGuid, startTime, endTime);
             SniffDatabase::LoadSpellCastGo(whereClause);
         }
 
@@ -1126,12 +1136,15 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
 
     std::multimap<uint32, std::pair<std::shared_ptr<SniffedEvent>, std::vector<ScriptInfo>>> scriptEventsMap;
 
-    uint32 lastEventTime = uiStartTime;
+    uint64 lastEventTime = uiStartTime;
     for (const auto& itr : m_eventsMap)
     {
-        uint32 timeDiff = itr.first - lastEventTime;
+        uint64 timeDiff = itr.first - lastEventTime;
         printf("\n\n----------------------\n");
-        printf("%u SECONDS LATER\n", timeDiff);
+        if (timeDiff < 1000)
+            printf("%llu MS LATER\n", timeDiff);
+        else
+            printf("%llu SECONDS LATER\n", timeDiff / 1000);
         printf("----------------------\n\n");
         printf("%s", itr.second->ToString(false).c_str());
         lastEventTime = itr.first;
@@ -1144,7 +1157,7 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
             printf("\n\nDo you want to include this event in the script? (y/n)\n> ");
 
         if ((GetChar() == 'y') && !vScriptActions.empty())
-            scriptEventsMap.insert(std::make_pair(itr.first, std::make_pair(itr.second, vScriptActions)));
+            scriptEventsMap.insert(std::make_pair(uint32(itr.first / 1000), std::make_pair(itr.second, vScriptActions)));
     }
 
     m_eventsMap.clear();
@@ -1434,7 +1447,7 @@ uint32 TimelineMaker::GetTemporaryIdForUnknownBroadcastText(std::string text)
     return UNKNOWN_TEXTS_START + std::distance(m_unknownScriptTexts.begin(), itr);
 }
 
-void TimelineMaker::GetScriptInfoFromSniffedEvent(uint32 unixtime, std::shared_ptr<SniffedEvent> sniffedEvent, std::vector<ScriptInfo>& scriptActions)
+void TimelineMaker::GetScriptInfoFromSniffedEvent(uint64 unixtimems, std::shared_ptr<SniffedEvent> sniffedEvent, std::vector<ScriptInfo>& scriptActions)
 {
     if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureCreate2>(sniffedEvent))
     {
@@ -1550,7 +1563,7 @@ void TimelineMaker::GetScriptInfoFromSniffedEvent(uint32 unixtime, std::shared_p
     }
     else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_npc_flags>(sniffedEvent))
     {
-        uint32 oldFlags = SniffDatabase::GetCreatureFieldValueBeforeTime(ptr->m_guid, unixtime, "npc_flags");
+        uint32 oldFlags = SniffDatabase::GetCreatureFieldValueBeforeTime(ptr->m_guid, unixtimems, "npc_flags");
         uint32 removedFlags = 0;
         uint32 addedFlags = 0;
         for (uint32 i = 0; i < 32; i++)
@@ -1590,7 +1603,7 @@ void TimelineMaker::GetScriptInfoFromSniffedEvent(uint32 unixtime, std::shared_p
     }
     else if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_CreatureUpdate_unit_flags>(sniffedEvent))
     {
-        uint32 oldFlags = SniffDatabase::GetCreatureFieldValueBeforeTime(ptr->m_guid, unixtime, "unit_flags");
+        uint32 oldFlags = SniffDatabase::GetCreatureFieldValueBeforeTime(ptr->m_guid, unixtimems, "unit_flags");
         uint32 removedFlags = 0;
         uint32 addedFlags = 0;
         for (uint32 i = 0; i < 32; i++)

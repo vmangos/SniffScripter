@@ -24,11 +24,11 @@ public:
 
     static void CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime);
     static void SaveScriptToFile(std::ofstream& log, uint32 scriptId, std::string tableName, std::vector<ScriptInfo> const& vScripts, uint32 delayOffset);
-    static void GetScriptInfoFromSniffedEvent(uint32 unixtime, std::shared_ptr<SniffedEvent> sniffedEvent, std::vector<ScriptInfo>& scriptActions);
+    static void GetScriptInfoFromSniffedEvent(uint64 unixtimems, std::shared_ptr<SniffedEvent> sniffedEvent, std::vector<ScriptInfo>& scriptActions);
     static uint32 GetTemporaryIdForUnknownBroadcastText(std::string text);
     static std::vector<std::string> m_unknownScriptTexts;
 
-    static std::multimap<uint32, std::shared_ptr<SniffedEvent>> m_eventsMap;
+    static std::multimap<uint64, std::shared_ptr<SniffedEvent>> m_eventsMap;
 };
 
 #endif

@@ -249,7 +249,10 @@ int main()
 
             printf("Duration: ");
             uint32 uiEndTime = GetUInt32();
-            uiEndTime = uiStartTime + uiEndTime;
+            if (uiEndTime != 0)
+                uiEndTime = uiStartTime + uiEndTime;
+            else
+                uiEndTime = UINT32_MAX;
 
             TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showReclaimCorpse, showReleaseSpirit, showQuests, showUseItem, showCreatures, showCreatureInteract, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectUse, showGameObjectCasts, showGameObjectUpdates, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
@@ -283,7 +286,10 @@ int main()
 
             printf("Duration: ");
             uint32 uiEndTime = GetUInt32();
-            uiEndTime = uiStartTime + uiEndTime;
+            if (uiEndTime != 0)
+                uiEndTime = uiStartTime + uiEndTime;
+            else
+                uiEndTime = UINT32_MAX;
 
             TimelineMaker::CreateScriptFromEvents(uiStartTime, uiEndTime);
             GetChar();
