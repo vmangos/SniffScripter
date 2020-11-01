@@ -952,8 +952,8 @@ struct QuestEventData
 
 bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
 {
-    SniffDatabase::LoadQuestAcceptTimes("(`unixtime` != 0)");
-    SniffDatabase::LoadQuestCompleteTimes("(`unixtime` != 0)");
+    SniffDatabase::LoadQuestAcceptTimes("(`unixtimems` != 0)");
+    SniffDatabase::LoadQuestCompleteTimes("(`unixtimems` != 0)");
 
     if (m_eventsMap.empty())
         return false;
@@ -1053,13 +1053,13 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
         
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtime`<= %u)", itr.objectGuid, startTime, endTime);
+            snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
         
         {
             char whereClause[128] = {};
-            snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtime`<= %u)", itr.objectGuid, startTime, endTime);
+            snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
             SniffDatabase::LoadSpellCastGo(whereClause);
         }
 

@@ -64,20 +64,6 @@ enum
 
 int main()
 {
-    printf("\nEnter your database connection info.\n");
-    std::string const connection_string = MakeConnectionString();
-
-    printf("\nConnecting to database.\n");
-    if (!GameDb.Initialize(connection_string.c_str()))
-    {
-        printf("\nError: Cannot connect to world database!\n");
-        GetChar();
-        return 1;
-    }
-
-    WorldDatabase::LoadWorldDatabase();
-    printf("\n");
-
     printf("Options:\n");
     printf("1. Create timeline for specific guids\n");
     printf("2. Create timeline for all in time period\n");
@@ -96,10 +82,24 @@ int main()
         option == OPTION_QUESTS_WITH_RP_EVENTS ||
         option == OPTION_GENERATE_SCRIPT)
     {
-        
+        printf("\nEnter your database connection info.\n");
+        std::string const connection_string = MakeConnectionString();
+
+        printf("\nConnecting to database.\n");
+        if (!GameDb.Initialize(connection_string.c_str()))
+        {
+            printf("\nError: Cannot connect to world database!\n");
+            GetChar();
+            return 1;
+        }
+
+        WorldDatabase::LoadWorldDatabase();
+        printf("\n");
+
         printf("Enter sniff database name: ");
         SniffDatabase::m_databaseName = GetString("sniffs_new_test");
         SniffDatabase::LoadSniffDatabase();
+        printf("\n");
 
         if (option == OPTION_TIMELINE_SPECIFIC_GUIDS)
         {
@@ -310,19 +310,29 @@ int main()
     }
     else if (option == OPTION_BREAKDOWN_NPC_FLAGS)
     {
-        printf("NPC Flags: ");
-        uint32 flags = GetUInt32();
-        std::string flagNames = GetNpcFlagNames(flags);
-        printf(flagNames.c_str());
-        GetChar();
+        bool repeat = true;
+        while (repeat)
+        {
+            printf("NPC Flags: ");
+            uint32 flags = GetUInt32();
+            std::string flagNames = GetNpcFlagNames(flags);
+            printf(flagNames.c_str());
+            printf("\nAgain? (y/n)\n>");
+            repeat = GetChar() == 'y';
+        }
     }
     else if (option == OPTION_BREAKDOWN_UNIT_FLAGS)
     {
-        printf("Unit Flags: ");
-        uint32 flags = GetUInt32();
-        std::string flagNames = GetUnitFlagNames(flags);
-        printf(flagNames.c_str());
-        GetChar();
+        bool repeat = true;
+        while (repeat)
+        {
+            printf("Unit Flags: ");
+            uint32 flags = GetUInt32();
+            std::string flagNames = GetUnitFlagNames(flags);
+            printf(flagNames.c_str());
+            printf("\nAgain? (y/n)\n>");
+            repeat = GetChar() == 'y';
+        }
     }
 
     GetChar();
