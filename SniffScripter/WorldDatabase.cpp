@@ -177,9 +177,18 @@ void WorldDatabase::LoadBroadcastTexts()
 
             uint32 entry = pFields[0].getUInt32();
             std::string maleText = pFields[1].getCppString();
-            std::string femaleText = pFields[1].getCppString();
+            auto index = maleText.find("$N", 0);
+            if (index != std::string::npos)
+                maleText.replace(index, 2, "$n");
+
+            std::string femaleText = pFields[2].getCppString();
+            index = femaleText.find("$N", 0);
+            if (index != std::string::npos)
+                femaleText.replace(index, 2, "$n");
+
             m_broadcastTexts.insert(std::make_pair(entry, BroadcastText(maleText, femaleText)));
 
         } while (result->NextRow());
     }
+    printf("loaded %u texts\n", m_broadcastTexts.size());
 }

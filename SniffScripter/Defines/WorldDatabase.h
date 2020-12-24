@@ -87,6 +87,10 @@ public:
     }
     static uint32 GetBroadcastTextId(std::string text)
     {
+        auto index = text.find("$N", 0);
+        if (index != std::string::npos)
+            text.replace(index, 2, "$n");
+
         for (auto const& itr : m_broadcastTexts)
         {
             if (itr.second.m_maleText == text || itr.second.m_femaleText == text)

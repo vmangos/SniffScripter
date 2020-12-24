@@ -23,6 +23,8 @@ std::string MakeConnectionString()
     std::string mysql_pass;
     std::string mysql_db;
 
+    fseek(stdin, 0, SEEK_END);
+
     printf("Host: ");
     getline(std::cin, mysql_host);
     if (mysql_host.empty())
@@ -47,6 +49,8 @@ std::string MakeConnectionString()
     getline(std::cin, mysql_db);
     if (mysql_db.empty())
         mysql_db = "mangos";
+
+    fseek(stdin, 0, SEEK_END);
 
     return mysql_host + ";" + mysql_port + ";" + mysql_user + ";" + mysql_pass + ";" + mysql_db;
 }
@@ -149,6 +153,9 @@ int main()
             printf("Show when client used items? (y/n)\n> ");
             bool showUseItem = GetChar() == 'y';
 
+            printf("Show when creatures died? (y/n)\n> ");
+            bool showDeaths = GetChar() == 'y';
+
             printf("Show when creatures attacked something? (y/n)\n> ");
             bool showAttacks = GetChar() == 'y';
 
@@ -173,7 +180,7 @@ int main()
             printf("Start time: ");
             uint32 uiStartTime = GetUInt32();
 
-            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
+            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem, showDeaths, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
             return 0;
         }
@@ -194,6 +201,7 @@ int main()
             printf("Show creature related events? (y/n)\n> ");
             bool showCreatures = GetChar() == 'y';
             bool showCreatureInteract = false;
+            bool showCreatureDeaths = false;
             bool showCreatureAttacks = false;
             bool showCreatureTexts = false;
             bool showCreatureEmotes = false;
@@ -204,6 +212,9 @@ int main()
             {
                 printf("Show when client interacted with creatures? (y/n)\n> ");
                 showCreatureInteract = GetChar() == 'y';
+
+                printf("Show when creatures died? (y/n)\n> ");
+                showCreatureDeaths = GetChar() == 'y';
 
                 printf("Show when creatures attacked something? (y/n)\n> ");
                 showCreatureAttacks = GetChar() == 'y';
@@ -254,7 +265,7 @@ int main()
             else
                 uiEndTime = UINT32_MAX;
 
-            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showReclaimCorpse, showReleaseSpirit, showQuests, showUseItem, showCreatures, showCreatureInteract, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectUse, showGameObjectCasts, showGameObjectUpdates, showSounds);
+            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showReclaimCorpse, showReleaseSpirit, showQuests, showUseItem, showCreatures, showCreatureInteract, showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectUse, showGameObjectCasts, showGameObjectUpdates, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
             return 0;
         }

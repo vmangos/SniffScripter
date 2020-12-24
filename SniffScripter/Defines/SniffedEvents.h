@@ -76,6 +76,7 @@ enum SniffedEventType : uint8
     SE_CREATURE_CREATE1,
     SE_CREATURE_CREATE2,
     SE_CREATURE_DESTROY,
+    SE_CREATURE_DEATH,
     SE_CREATURE_TEXT,
     SE_CREATURE_EMOTE,
     SE_CREATURE_ATTACK_START,
@@ -194,6 +195,27 @@ struct SniffedEvent_CreatureDestroy : SniffedEvent
         return KnownObject(m_guid, m_entry, "Creature");
     }
 };
+
+struct SniffedEvent_CreatureDeath : SniffedEvent
+{
+    SniffedEvent_CreatureDeath(uint32 guid, uint32 entry) : m_guid(guid), m_entry(entry) {};
+    uint32 m_guid = 0;
+    uint32 m_entry = 0;
+    std::string ToString(bool /*singleLine*/) const final
+    {
+        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") dies.";
+        return txt;
+    }
+    SniffedEventType GetType() const final
+    {
+        return SE_CREATURE_DEATH;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "Creature");
+    }
+};
+
 
 struct SniffedEvent_CreatureText : SniffedEvent
 {

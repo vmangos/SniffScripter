@@ -13,7 +13,7 @@
 extern Database GameDb;
 std::multimap<uint64, std::shared_ptr<SniffedEvent>> TimelineMaker::m_eventsMap;
 
-void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint32>& vCreatureGuids, std::vector<uint32> vGameObjectGuids, bool showReclaimCorpse, bool showReleaseSpirit, bool showQuests, bool showCreatureInteract, bool showGameObjectUse, bool showItemUse, bool showAttacks, bool showTexts, bool showEmotes, bool showMoves, bool showUpdates, bool showCasts, bool showSounds)
+void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint32>& vCreatureGuids, std::vector<uint32> vGameObjectGuids, bool showReclaimCorpse, bool showReleaseSpirit, bool showQuests, bool showCreatureInteract, bool showGameObjectUse, bool showItemUse, bool showDeaths, bool showAttacks, bool showTexts, bool showEmotes, bool showMoves, bool showUpdates, bool showCasts, bool showSounds)
 {
     for (const auto& guid : vCreatureGuids)
     {
@@ -74,6 +74,40 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
             SniffDatabase::LoadCreatureMovement(whereClause);
         }
 
+        if (!showDeaths)
+        {
+            char whereClause[128] = {};
+            snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
+            SniffDatabase::LoadCreatureDeath(whereClause);
+        }
+
+        if (showCasts)
+        {
+            {
+                char whereClause[128] = {};
+                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
+                SniffDatabase::LoadSpellCastStart(whereClause);
+            }
+
+            {
+                char whereClause[256] = {};
+                snprintf(whereClause, 255, "(`caster_guid` != %u) && (`target_guid` = %u) && (`target_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, guid, uiStartTime);
+                SniffDatabase::LoadSpellCastStart(whereClause);
+            }
+
+            {
+                char whereClause[128] = {};
+                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
+                SniffDatabase::LoadSpellCastGo(whereClause);
+            }
+
+            {
+                char whereClause[256] = {};
+                snprintf(whereClause, 255, "(`caster_guid` != %u) && (`main_target_guid` = %u) && (`main_target_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, guid, uiStartTime);
+                SniffDatabase::LoadSpellCastGo(whereClause);
+            }
+        }
+
         if (showUpdates)
         {
             {
@@ -116,33 +150,6 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
                 char whereClause[128] = {};
                 snprintf(whereClause, 127, "(`guid` = %u) && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
                 SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
-            }
-        }
-
-        if (showCasts)
-        {
-            {
-                char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
-                SniffDatabase::LoadSpellCastStart(whereClause);
-            }
-
-            {
-                char whereClause[256] = {};
-                snprintf(whereClause, 255, "(`caster_guid` != %u) && (`target_guid` = %u) && (`target_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, guid, uiStartTime);
-                SniffDatabase::LoadSpellCastStart(whereClause);
-            }
-
-            {
-                char whereClause[128] = {};
-                snprintf(whereClause, 127, "(`caster_guid` = %u) && (`caster_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, uiStartTime);
-                SniffDatabase::LoadSpellCastGo(whereClause);
-            }
-
-            {
-                char whereClause[256] = {};
-                snprintf(whereClause, 255, "(`caster_guid` != %u) && (`main_target_guid` = %u) && (`main_target_type` = 'Creature') && (`unixtimems` >= (%u * 1000))", guid, guid, uiStartTime);
-                SniffDatabase::LoadSpellCastGo(whereClause);
             }
         }
 
@@ -292,7 +299,7 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
     }
 }
 
-void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, bool showReclaimCorpse, bool showReleaseSpirit, bool showQuests, bool showUseItem, bool showCreatures, bool showCreatureInteract, bool showCreatureAttacks, bool showCreatureTexts, bool showCreatureEmotes, bool showCreatureMoves, bool showCreatureCasts, bool showCreatureUpdates, bool showGameObjects, bool showGameObjectUse, bool showGameObjectCasts, bool showGameObjectUpdates, bool showSounds)
+void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, bool showReclaimCorpse, bool showReleaseSpirit, bool showQuests, bool showUseItem, bool showCreatures, bool showCreatureInteract, bool showCreatureDeaths, bool showCreatureAttacks, bool showCreatureTexts, bool showCreatureEmotes, bool showCreatureMoves, bool showCreatureCasts, bool showCreatureUpdates, bool showGameObjects, bool showGameObjectUse, bool showGameObjectCasts, bool showGameObjectUpdates, bool showSounds)
 {
     // Client Actions
 
@@ -394,6 +401,13 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
             char whereClause[128] = {};
             snprintf(whereClause, 127, "(`unixtime` >= %u) && (`unixtime` <= %u)", uiStartTime, uiEndTime);
             SniffDatabase::LoadCreatureMovement(whereClause);
+        }
+
+        if (showCreatureDeaths)
+        {
+            char whereClause[128] = {};
+            snprintf(whereClause, 127, "(`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", uiStartTime, uiEndTime);
+            SniffDatabase::LoadCreatureDeath(whereClause);
         }
 
         if (showCreatureCasts)
@@ -638,7 +652,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
     if (!useStartPosition)
     {
         //                                                              0               1               2             3             4
-        if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `parent_point`, `spline_point`, `position_x`, `position_y`, `position_z` FROM `%s`.`creature_movement_spline` WHERE `guid`=%u", SniffDatabase::m_databaseName.c_str(), guid))
+        if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `parent_point`, `spline_point`, `position_x`, `position_y`, `position_z` FROM `%s`.`creature_movement_server_spline` WHERE `guid`=%u", SniffDatabase::m_databaseName.c_str(), guid))
         {
             do
             {
@@ -671,8 +685,8 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
 
     uint32 firstMoveTime = 0;
 
-    //                                                              0     1        2            3               4               5                   6                   7                   8                 9                 10                11             12
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `id`, `point`, `move_time`, `spline_flags`, `spline_count`, `start_position_x`, `start_position_y`, `start_position_z`, `end_position_x`, `end_position_y`, `end_position_z`, `orientation`, `unixtime` FROM `%s`.`creature_movement` WHERE `id`=%u", SniffDatabase::m_databaseName.c_str(), guid))
+    //                                                              0       1        2            3               4               5                   6                   7                   8                 9                 10                11             12
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `point`, `move_time`, `spline_flags`, `spline_count`, `start_position_x`, `start_position_y`, `start_position_z`, `end_position_x`, `end_position_y`, `end_position_z`, `orientation`, `unixtime` FROM `%s`.`creature_movement_server` WHERE `guid`=%u", SniffDatabase::m_databaseName.c_str(), guid))
     {
         uint32 pointCounter = 1;
         std::shared_ptr<SniffedEvent_VmangosWaypoints> lastPoint = nullptr;
@@ -1127,7 +1141,7 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
 
 void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
 {
-    CreateTimelineForAll(uiStartTime, uiEndTime, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true);
+    CreateTimelineForAll(uiStartTime, uiEndTime, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true);
     if (m_eventsMap.empty())
     {
         printf("No events found in time period.\n");

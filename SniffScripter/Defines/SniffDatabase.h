@@ -45,6 +45,7 @@ public:
     static void LoadCreatureEmote(char const* whereClause);
     static void LoadCreatureAttackStart(char const* whereClause);
     static void LoadCreatureAttackStop(char const* whereClause);
+    static void LoadCreatureDeath(char const* whereClause);
     static void LoadCreatureDestroy(char const* whereClause);
     static void LoadCreatureCreate2(char const* whereClause);
     static void LoadCreatureCreate1(char const* whereClause);
