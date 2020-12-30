@@ -21,7 +21,7 @@ void QueryObj::RunQuery(Database& db)
 void CallbackQueryObj::RunQuery(Database& db)
 {
     std::shared_ptr<ResultQueryHolder> result(new ResultQueryHolder(m_strMsgToSelf));
-    
+
     // Would be nonsensical for this to be empty.
     ASSERT(!m_uoQueries.empty());
 

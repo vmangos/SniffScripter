@@ -5,9 +5,9 @@
 #include "Database.h"
 #include "QueryResult.h"
 
-QueryResult::QueryResult(MYSQL_RES* result, MYSQL_FIELD* fields, uint64 rowCount, uint32 fieldCount) : 
-    m_pResult(result), 
-    m_uiFieldCount(fieldCount), 
+QueryResult::QueryResult(MYSQL_RES* result, MYSQL_FIELD* fields, uint64 rowCount, uint32 fieldCount) :
+    m_pResult(result),
+    m_uiFieldCount(fieldCount),
     m_uiRowCount(rowCount)
 {
     m_pCurrentRow = new DbField[m_uiFieldCount];
@@ -46,7 +46,7 @@ void QueryResult::EndQuery()
 {
     if (m_pCurrentRow)
     {
-        delete [] m_pCurrentRow;
+        delete[] m_pCurrentRow;
         m_pCurrentRow = 0;
     }
 
@@ -56,5 +56,3 @@ void QueryResult::EndQuery()
         m_pResult = 0;
     }
 }
-
-

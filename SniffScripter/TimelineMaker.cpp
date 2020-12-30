@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <ctime>
+#include <sstream>
 #include "Defines\SniffedEvents.h"
 #include "Defines\SniffDatabase.h"
 #include "Defines\TimelineMaker.h"
@@ -197,7 +199,7 @@ void TimelineMaker::CreateTimelineForGuids(uint32 uiStartTime, std::vector<uint3
                 SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
             }
         }
-        
+
         if (showCasts)
         {
             {
@@ -479,7 +481,6 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
             SniffDatabase::LoadCreatureDestroy(whereClause);
         }
     }
-    
 
     // GameObjects
 
@@ -531,7 +532,7 @@ void TimelineMaker::CreateTimelineForAll(uint32 uiStartTime, uint32 uiEndTime, b
             SniffDatabase::LoadGameObjectDestroy(whereClause);
         }
     }
-    
+
     // Sounds and Music
 
     if (showSounds)
@@ -565,7 +566,7 @@ void TimelineMaker::PromptTimelineSaveMethod(uint32 startTime)
 
 void TimelineMaker::PrintTimelineToScreen(uint32 startTime)
 {
-    uint64 lastEventTime = uint64(startTime)*1000;
+    uint64 lastEventTime = uint64(startTime) * 1000;
     for (const auto& itr : m_eventsMap)
     {
         uint64 timeDiff = itr.first - lastEventTime;
@@ -727,14 +728,14 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
                 fMoveTime = ceilf(fMoveTime);
                 uint32 roundedUpMoveTime = (uint32)fMoveTime;
                 uint32 timeDiff = unixtime - lastUnixTime;
-                
+
                 if (timeDiff > (roundedUpMoveTime * 2))
                 {
                     if (useStartPosition)
                         waittime = (timeDiff - roundedUpMoveTime) * 1000;
                     else
                         lastPoint->m_waittime = (timeDiff - roundedUpMoveTime) * 1000;
-                }    
+                }
             }
 
             if (useStartPosition)
@@ -786,7 +787,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
                         if (!samePointsList.empty())
                             comment = "position seen before in points: " + samePointsList;
                     }
-                    
+
                     std::shared_ptr<SniffedEvent_VmangosWaypoints> newEvent = std::make_shared<SniffedEvent_VmangosWaypoints>(id, pointCounter, posX, posY, posZ, final_orientation, 0, 0.0f, 0, comment);
                     m_eventsMap.insert(std::make_pair(uint64(unixtime) * 1000, newEvent));
 
@@ -797,7 +798,6 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
 
             lastMoveTime = move_time;
             lastUnixTime = unixtime;
-            
         } while (result->NextRow());
     }
 
@@ -897,7 +897,11 @@ uint32 TimelineMaker::SaveWaypointsToFile()
     if (m_eventsMap.empty())
         return 0;
 
-    std::ofstream log("waypoints.sql");
+    std::time_t result = std::time(nullptr);
+    std::stringstream ss;
+    ss << result;
+    std::string ts = ss.str();
+    std::ofstream log("waypoints_" + ts + ".sql");
     if (!log.is_open())
         return 0;
 
@@ -1064,13 +1068,13 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
                 SniffDatabase::LoadGameObjectUpdate<SniffedEvent_GameObjectUpdate_state>("state", whereClause);
             }
         }
-        
+
         {
             char whereClause[128] = {};
             snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
             SniffDatabase::LoadSpellCastStart(whereClause);
         }
-        
+
         {
             char whereClause[128] = {};
             snprintf(whereClause, 127, "(`caster_guid` = %u) && (`unixtimems` >= (%u * 1000)) && (`unixtimems` <= (%u * 1000))", itr.objectGuid, startTime, endTime);
@@ -1093,11 +1097,11 @@ bool TimelineMaker::FindQuestsWithRpEvents(uint32 const duration)
                 else if (sniffedEvent.second->GetType() == SE_CREATURE_MOVEMENT)
                     eventTypes.insert(std::string("Movement"));
                 else if (sniffedEvent.second->GetType() == SE_SPELL_CAST_START ||
-                         sniffedEvent.second->GetType() == SE_SPELL_CAST_GO)
+                    sniffedEvent.second->GetType() == SE_SPELL_CAST_GO)
                     eventTypes.insert(std::string("Spell Cast"));
-                else if (sniffedEvent.second->GetType() == SE_CREATURE_UPDATE_NPC_FLAGS || 
-                         sniffedEvent.second->GetType() == SE_GAMEOBJECT_UPDATE_FLAGS || 
-                         sniffedEvent.second->GetType() == SE_GAMEOBJECT_UPDATE_STATE)
+                else if (sniffedEvent.second->GetType() == SE_CREATURE_UPDATE_NPC_FLAGS ||
+                    sniffedEvent.second->GetType() == SE_GAMEOBJECT_UPDATE_FLAGS ||
+                    sniffedEvent.second->GetType() == SE_GAMEOBJECT_UPDATE_STATE)
                     eventTypes.insert(std::string("Values Update"));
             }
             std::string eventTypesList;
@@ -1222,7 +1226,7 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
             }
             log << "\n";
         }
-        
+
         if (!m_unknownScriptTexts.empty())
         {
             log << "Texts with placeholder broadcast ids:\n";
@@ -1232,7 +1236,7 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
             }
             log << "\n";
         }
-        
+
         log << "*/\n\n";
     }
 
@@ -1384,7 +1388,7 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
                 script.id = mainScriptId;
 
                 // Swap targets so that the correct source executes the command.
-                if (mainActor != source && 
+                if (mainActor != source &&
                     script.command != SCRIPT_COMMAND_TEMP_SUMMON_CREATURE &&
                     script.command != SCRIPT_COMMAND_SUMMON_OBJECT)
                 {
@@ -1413,7 +1417,7 @@ void TimelineMaker::CreateScriptFromEvents(uint32 uiStartTime, uint32 uiEndTime)
                 }
             }
         }
-        
+
         log << "-- Script for " << FormatObjectName(itr.first) << "\n";
         SaveScriptToFile(log, GENERIC_SCRIPTS_START + itr.second.first, "generic_scripts", itr.second.second, delayOffset);
     }

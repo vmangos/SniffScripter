@@ -14,6 +14,12 @@
 #include "Defines\\Helpers.h"
 
 Database GameDb;
+std::string mysql_host_default = "localhost";
+std::string mysql_port_default = "3306";
+std::string mysql_user_default = "root";
+std::string mysql_pass_default = "password";
+std::string mysql_world_db_default = "voamangos";
+std::string mysql_sniff_db_default = "nost2";
 
 std::string MakeConnectionString()
 {
@@ -25,30 +31,37 @@ std::string MakeConnectionString()
 
     fseek(stdin, 0, SEEK_END);
 
-    printf("Host: ");
+    printf("Host (or press Enter to use all defaults): ");
     getline(std::cin, mysql_host);
     if (mysql_host.empty())
-        mysql_host = "127.0.0.1";
+    {
+        mysql_host = mysql_host_default;
+        mysql_port = mysql_port_default;
+        mysql_user = mysql_user_default;
+        mysql_pass = mysql_pass_default;
+        mysql_db = mysql_world_db_default;
+        return mysql_host + ";" + mysql_port + ";" + mysql_user + ";" + mysql_pass + ";" + mysql_db;
+    }
 
     printf("Port: ");
     getline(std::cin, mysql_port);
     if (mysql_port.empty())
-        mysql_port = "3306";
+        mysql_port = mysql_port_default;
 
     printf("User: ");
     getline(std::cin, mysql_user);
     if (mysql_user.empty())
-        mysql_user = "root";
+        mysql_user = mysql_user_default;
 
     printf("Password: ");
     getline(std::cin, mysql_pass);
     if (mysql_pass.empty())
-        mysql_pass = "root";
+        mysql_pass = mysql_pass_default;
 
     printf("World db: ");
     getline(std::cin, mysql_db);
     if (mysql_db.empty())
-        mysql_db = "mangos";
+        mysql_db = mysql_world_db_default;
 
     fseek(stdin, 0, SEEK_END);
 
@@ -64,47 +77,17 @@ enum
     OPTION_QUESTS_WITH_RP_EVENTS    = 5,
     OPTION_BREAKDOWN_NPC_FLAGS      = 6,
     OPTION_BREAKDOWN_UNIT_FLAGS     = 7,
+    OPTION_QUIT                     = 8,
 };
 
-int main()
+int runOnce(uint32 option)
 {
-    printf("Options:\n");
-    printf("1. Create timeline for specific guids\n");
-    printf("2. Create timeline for all in time period\n");
-    printf("3. Create waypoints and show events as comments\n");
-    printf("4. Create database script from selected events\n");
-    printf("5. List quests with RP events\n");
-    printf("6. Breakdown NPC Flags\n");
-    printf("7. Breakdown Unit Flags\n");
-    printf("> ");
-
-    uint32 option = GetUInt32();
-
     if (option == OPTION_TIMELINE_SPECIFIC_GUIDS ||
         option == OPTION_TIMELINE_ALL_EVENTS ||
         option == OPTION_TIMELINE_WAYPOINTS ||
         option == OPTION_QUESTS_WITH_RP_EVENTS ||
         option == OPTION_GENERATE_SCRIPT)
     {
-        printf("\nEnter your database connection info.\n");
-        std::string const connection_string = MakeConnectionString();
-
-        printf("\nConnecting to database.\n");
-        if (!GameDb.Initialize(connection_string.c_str()))
-        {
-            printf("\nError: Cannot connect to world database!\n");
-            GetChar();
-            return 1;
-        }
-
-        WorldDatabase::LoadWorldDatabase();
-        printf("\n");
-
-        printf("Enter sniff database name: ");
-        SniffDatabase::m_databaseName = GetString("sniffs_new_test");
-        SniffDatabase::LoadSniffDatabase();
-        printf("\n");
-
         if (option == OPTION_TIMELINE_SPECIFIC_GUIDS)
         {
             std::vector<uint32> vCreatureGuids;
@@ -176,7 +159,7 @@ int main()
 
             printf("Show when sounds or music played? (y/n)\n> ");
             bool showSounds = GetChar() == 'y';
-            
+
             printf("Start time: ");
             uint32 uiStartTime = GetUInt32();
 
@@ -234,7 +217,7 @@ int main()
                 printf("Show changes to creature update fields? (y/n)\n> ");
                 showCreatureUpdates = GetChar() == 'y';
             }
-            
+
             printf("Show gameobject related events? (y/n)\n> ");
             bool showGameObjects = GetChar() == 'y';
             bool showGameObjectUse = false;
@@ -345,9 +328,48 @@ int main()
             repeat = GetChar() == 'y';
         }
     }
-
-    GetChar();
-    GameDb.Uninitialise();
     return 0;
 }
 
+int main()
+{
+    printf("Enter your database connection info.\n");
+    std::string const connection_string = MakeConnectionString();
+
+    printf("\nConnecting to database.\n");
+    if (!GameDb.Initialize(connection_string.c_str()))
+    {
+        printf("\nError: Cannot connect to world database!\n");
+        GetChar();
+        return 1;
+    }
+    WorldDatabase::LoadWorldDatabase();
+
+    printf("\n");
+    printf("Enter sniff database name (or press Enter to use default): ");
+    SniffDatabase::m_databaseName = GetString(mysql_sniff_db_default);
+    SniffDatabase::LoadSniffDatabase();
+    printf("\n");
+
+    uint32 option = OPTION_TIMELINE_WAYPOINTS;
+    while (option != OPTION_QUIT)
+    {
+        printf("Options:\n");
+        printf("1. Create timeline for specific guids\n");
+        printf("2. Create timeline for all in time period\n");
+        printf("3. Create waypoints and show events as comments\n");
+        printf("4. Create database script from selected events\n");
+        printf("5. List quests with RP events\n");
+        printf("6. Breakdown NPC Flags\n");
+        printf("7. Breakdown Unit Flags\n");
+        printf("8. Exit\n");
+        printf("> ");
+        option = GetUInt32();
+        runOnce(option);
+    }
+
+    GameDb.Uninitialise();
+    printf("Exited - press any key to close window.");
+    GetChar();
+    return 0;
+}

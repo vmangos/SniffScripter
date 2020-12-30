@@ -19,14 +19,14 @@ struct KnownObject
     bool operator==(KnownObject const& other) const
     {
         return m_guid == other.m_guid &&
-               m_entry == other.m_entry &&
-               m_type == other.m_type;
+            m_entry == other.m_entry &&
+            m_type == other.m_type;
     }
     bool operator!=(KnownObject const& other) const
     {
         return !(m_guid == other.m_guid &&
-                 m_entry == other.m_entry &&
-                 m_type == other.m_type);
+            m_entry == other.m_entry &&
+            m_type == other.m_type);
     }
     bool operator<(KnownObject const& other) const
     {
@@ -216,10 +216,9 @@ struct SniffedEvent_CreatureDeath : SniffedEvent
     }
 };
 
-
 struct SniffedEvent_CreatureText : SniffedEvent
 {
-    SniffedEvent_CreatureText(uint32 guid, uint32 entry, std::string text, uint32 chatType, std::string comment) : 
+    SniffedEvent_CreatureText(uint32 guid, uint32 entry, std::string text, uint32 chatType, std::string comment) :
         m_guid(guid), m_entry(entry), m_chatType(chatType), m_text(text), m_comment(comment) {};
     uint32 m_guid = 0;
     uint32 m_entry = 0;
@@ -239,7 +238,7 @@ struct SniffedEvent_CreatureText : SniffedEvent
             txt += "Chat Type: " + GetGetChatTypeName(ConvertChatTypeToVmangosFormat(m_chatType)) + "\n";
             txt += "Comment: " + m_comment;
         }
-        
+
         return txt;
     }
     SniffedEventType GetType() const final
@@ -347,7 +346,7 @@ struct SniffedEvent_CreatureMovement : SniffedEvent
     float m_orientation = 0.0f;
     std::string ToString(bool /*singleLine*/) const final
     {
-        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") moves to point " + std::to_string(m_point) + " in " + std::to_string(m_moveTime) +" ms.\n";
+        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") moves to point " + std::to_string(m_point) + " in " + std::to_string(m_moveTime) + " ms.\n";
         txt += "Start Position: " + std::to_string(m_startX) + " " + std::to_string(m_startY) + " " + std::to_string(m_startZ) + "\n";
         txt += "End Position: " + std::to_string(m_endX) + " " + std::to_string(m_endY) + " " + std::to_string(m_endZ) + "\n";
         txt += "Final Orientation: " + std::to_string(m_orientation);
@@ -442,7 +441,7 @@ struct SniffedEvent_CreatureUpdate_faction : SniffedEvent
     uint32 m_value = 0;
     std::string ToString(bool /*singleLine*/) const final
     {
-        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") updates faction to " + std::to_string(m_value) + + " (" + WorldDatabase::GetFactionName(m_value) + ").";
+        std::string txt = "Creature " + WorldDatabase::GetCreatureName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") updates faction to " + std::to_string(m_value) + +" (" + WorldDatabase::GetFactionName(m_value) + ").";
         return txt;
     }
     SniffedEventType GetType() const final
@@ -707,7 +706,7 @@ struct SniffedEvent_PlaySound : SniffedEvent
             if (m_sourceId != 0)
                 txt += " Source is " + FormatObjectName(m_sourceGuid, m_sourceId, m_sourceType) + ".";
         }
-        
+
         return txt;
     }
     SniffedEventType GetType() const final
@@ -754,7 +753,7 @@ struct SniffedEvent_SpellCastStart : SniffedEvent
     }
 };
 
-struct SniffedEvent_SpellCastGo: SniffedEvent
+struct SniffedEvent_SpellCastGo : SniffedEvent
 {
     SniffedEvent_SpellCastGo(uint32 spellId, uint32 casterGuid, uint32 casterId, std::string casterType, uint32 targetGuid, uint32 targetId, std::string targetType, uint32 hitTargetsCount, uint32 hitTargetsListId) :
         m_spellId(spellId), m_casterGuid(casterGuid), m_casterId(casterId), m_casterType(casterType), m_targetGuid(targetGuid), m_targetId(targetId), m_targetType(targetType), m_hitTargetsCount(hitTargetsCount), m_hitTargetsListId(hitTargetsListId) {};
@@ -788,7 +787,7 @@ struct SniffedEvent_SpellCastGo: SniffedEvent
                 }
             }
         }
-        
+
         return txt;
     }
     SniffedEventType GetType() const final

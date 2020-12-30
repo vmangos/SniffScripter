@@ -5,13 +5,12 @@
 #include "DbField.h"
 #include "Database.h"
 
-DbField::DbField() : 
+DbField::DbField() :
     m_pData(nullptr)
 {
-
 }
 
-DbField::DbField(DbField &f)
+DbField::DbField(DbField& f)
 {
     const char* value = nullptr;
     value = f.getString();
@@ -22,7 +21,7 @@ DbField::DbField(DbField &f)
         m_pData = nullptr;
 }
 
-DbField::DbField(const char* value) 
+DbField::DbField(const char* value)
 {
     if (value && (m_pData = new char[strlen(value) + 1]))
         strcpy(m_pData, value);
@@ -33,13 +32,13 @@ DbField::DbField(const char* value)
 DbField::~DbField()
 {
     if (m_pData)
-        delete [] m_pData;
+        delete[] m_pData;
 }
 
 void DbField::SetValue(const char* value)
 {
     if (m_pData)
-        delete [] m_pData;
+        delete[] m_pData;
 
     if (value)
     {
@@ -51,5 +50,3 @@ void DbField::SetValue(const char* value)
         m_pData = nullptr;
     }
 }
-
-
