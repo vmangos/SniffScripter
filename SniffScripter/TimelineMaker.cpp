@@ -10,6 +10,7 @@
 #include "Defines\TimelineMaker.h"
 #include "Defines\ScriptCommands.h"
 #include "Defines\Helpers.h"
+#include "Defines\WorldDatabase.h"
 #include "Database\Database.h"
 
 extern Database GameDb;
@@ -634,7 +635,7 @@ std::string GetListOfPointsWithSamePosition(float posX, float posY, float posZ, 
     std::string points;
     for (const auto& itr : TimelineMaker::m_eventsMap)
     {
-        if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_VmangosWaypoints>(itr.second))
+        if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_mangosWaypoints>(itr.second))
         {
             if (ptr->m_position_x == posX && ptr->m_position_y == posY && ptr->m_position_z == posZ && (ptr->m_point != point - 1))
             {
@@ -690,7 +691,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
     if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `point`, `move_time`, `spline_flags`, `spline_count`, `start_position_x`, `start_position_y`, `start_position_z`, `end_position_x`, `end_position_y`, `end_position_z`, `orientation`, `unixtime` FROM `%s`.`creature_movement_server` WHERE `guid`=%u", SniffDatabase::m_databaseName.c_str(), guid))
     {
         uint32 pointCounter = 1;
-        std::shared_ptr<SniffedEvent_VmangosWaypoints> lastPoint = nullptr;
+        std::shared_ptr<SniffedEvent_mangosWaypoints> lastPoint = nullptr;
         uint32 lastMoveTime = 0;
         uint32 lastUnixTime = 0;
         float lastOrientation = 100.0f;
@@ -746,7 +747,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
                 std::string comment = GetListOfPointsWithSamePosition(start_position_x, start_position_y, start_position_z, point);
                 if (!comment.empty())
                     comment = "position seen before in points: " + comment;
-                std::shared_ptr<SniffedEvent_VmangosWaypoints> newEvent = std::make_shared<SniffedEvent_VmangosWaypoints>(id, pointCounter, start_position_x, start_position_y, start_position_z, orientation, waittime, 0.0f, 0, comment);
+                std::shared_ptr<SniffedEvent_mangosWaypoints> newEvent = std::make_shared<SniffedEvent_mangosWaypoints>(id, pointCounter, start_position_x, start_position_y, start_position_z, orientation, waittime, 0.0f, 0, comment);
                 m_eventsMap.insert(std::make_pair(uint64(unixtime) * 1000, newEvent));
 
                 lastPoint = newEvent;
@@ -763,7 +764,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
                         uint32 splinesCount = (splines.size() - 1);
                         float orientation = (i == splinesCount) ? final_orientation : 100.0f;
                         std::string comment = "spline " + std::to_string(i) + "/" + std::to_string(splinesCount);
-                        std::shared_ptr<SniffedEvent_VmangosWaypoints> newEvent = std::make_shared<SniffedEvent_VmangosWaypoints>(id, pointCounter, spline.position_x, spline.position_y, spline.position_z, orientation, 0, 0.0f, 0, comment);
+                        std::shared_ptr<SniffedEvent_mangosWaypoints> newEvent = std::make_shared<SniffedEvent_mangosWaypoints>(id, pointCounter, spline.position_x, spline.position_y, spline.position_z, orientation, 0, 0.0f, 0, comment);
                         m_eventsMap.insert(std::make_pair(uint64(unixtime) * 1000, newEvent));
 
                         lastPoint = newEvent;
@@ -788,7 +789,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition)
                             comment = "position seen before in points: " + samePointsList;
                     }
 
-                    std::shared_ptr<SniffedEvent_VmangosWaypoints> newEvent = std::make_shared<SniffedEvent_VmangosWaypoints>(id, pointCounter, posX, posY, posZ, final_orientation, 0, 0.0f, 0, comment);
+                    std::shared_ptr<SniffedEvent_mangosWaypoints> newEvent = std::make_shared<SniffedEvent_mangosWaypoints>(id, pointCounter, posX, posY, posZ, final_orientation, 0, 0.0f, 0, comment);
                     m_eventsMap.insert(std::make_pair(uint64(unixtime) * 1000, newEvent));
 
                     lastPoint = newEvent;
@@ -905,7 +906,7 @@ uint32 TimelineMaker::SaveWaypointsToFile()
     if (!log.is_open())
         return 0;
 
-    log << "INSERT INTO `creature_movement` (`id`, `point`, `position_x`, `position_y`, `position_z`, `orientation`, `waittime`, `wander_distance`, `script_id`) VALUES\n";
+    log << (CURRENT_BUILD >= TBC_START_BUILD ? "INSERT INTO `creature_movement` (`id`, `point`, `position_x`, `position_y`, `position_z`, `orientation`, `waittime`, `script_id`) VALUES\n" : "INSERT INTO `creature_movement` (`id`, `point`, `position_x`, `position_y`, `position_z`, `orientation`, `waittime`, `wander_distance`, `script_id`) VALUES\n");
 
     uint32 totalWaypointRows = 0;
     for (const auto& itr : m_eventsMap)
@@ -918,7 +919,7 @@ uint32 TimelineMaker::SaveWaypointsToFile()
     uint32 waypointRows = 0;
     for (const auto& itr : m_eventsMap)
     {
-        if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_VmangosWaypoints>(itr.second))
+        if (auto ptr = std::dynamic_pointer_cast<SniffedEvent_mangosWaypoints>(itr.second))
         {
             log << ptr->ToString(true);
             waypointRows++;
@@ -1434,14 +1435,14 @@ void TimelineMaker::SaveScriptToFile(std::ofstream& log, uint32 scriptId, std::s
 {
     uint32 count = 0;
     log << "DELETE FROM `" << tableName << "` WHERE `id`=" << scriptId << ";\n";
-    log << "INSERT INTO `" << tableName << "` (`id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id`, `comments`) VALUES\n";
+    log << "INSERT INTO `" << tableName << (CURRENT_BUILD >= TBC_START_BUILD) ? "` (`id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `buddy_entry`, `search_radius`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id`, `comments`) VALUES\n" : "` (`id`, `delay`, `command`, `datalong`, `datalong2`, `datalong3`, `datalong4`, `target_param1`, `target_param2`, `target_type`, `data_flags`, `dataint`, `dataint2`, `dataint3`, `dataint4`, `x`, `y`, `z`, `o`, `condition_id`, `comments`) VALUES\n";
     for (const auto& script : vScripts)
     {
         if (count > 0)
             log << ",\n";
         log << "(" << script.id << ", " << script.delay - delayOffset << ", " << script.command << ", "
-            << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << script.raw.data[3] << ", "
-            << script.target_param1 << ", " << script.target_param2 << ", " << script.target_type << ", "
+            << script.raw.data[0] << ", " << script.raw.data[1] << ", " << script.raw.data[2] << ", " << (CURRENT_BUILD >= TBC_START_BUILD ? "" : script.raw.data[3] + ", ")
+            << script.target_param1 << ", " << script.target_param2 << ", " << (CURRENT_BUILD >= TBC_START_BUILD ? "" : script.target_type + ", ")
             << script.raw.data[4] << ", " << script.raw.data[5] << ", " << script.raw.data[6] << ", " << script.raw.data[7] << ", "
             << script.raw.data[8] << ", " << script.x << ", " << script.y << ", " << script.z << ", " << script.o << ", "
             << script.condition << ", '" << script.comment << "')";

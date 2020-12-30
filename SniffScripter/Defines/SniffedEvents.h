@@ -363,9 +363,9 @@ struct SniffedEvent_CreatureMovement : SniffedEvent
     }
 };
 
-struct SniffedEvent_VmangosWaypoints : SniffedEvent
+struct SniffedEvent_mangosWaypoints : SniffedEvent
 {
-    SniffedEvent_VmangosWaypoints(uint32 guid, uint32 point, float position_x, float position_y, float position_z, float orientation, uint32 waittime, float wander_distance, uint32 script_id, std::string comment) :
+    SniffedEvent_mangosWaypoints(uint32 guid, uint32 point, float position_x, float position_y, float position_z, float orientation, uint32 waittime, float wander_distance, uint32 script_id, std::string comment) :
         m_guid(guid), m_point(point), m_position_x(position_x), m_position_y(position_y), m_position_z(position_z), m_orientation(orientation), m_waittime(waittime), m_wander_distance(wander_distance), m_script_id(script_id), m_comment(comment) {};
     uint32 m_guid = 0;
     uint32 m_point = 0;
@@ -379,7 +379,7 @@ struct SniffedEvent_VmangosWaypoints : SniffedEvent
     std::string m_comment;
     std::string ToString(bool /*singleLine*/) const final
     {
-        std::string txt = "(" + std::to_string(m_guid) + ", " + std::to_string(m_point) + ", " + std::to_string(m_position_x) + ", " + std::to_string(m_position_y) + ", " + std::to_string(m_position_z) + ", " + std::to_string(m_orientation) + ", " + std::to_string(m_waittime) + ", " + std::to_string(m_wander_distance) + ", " + std::to_string(m_script_id) + ")";
+        std::string txt = "(" + std::to_string(m_guid) + ", " + std::to_string(m_point) + ", " + std::to_string(m_position_x) + ", " + std::to_string(m_position_y) + ", " + std::to_string(m_position_z) + ", " + std::to_string(m_orientation) + ", " + std::to_string(m_waittime) + (CURRENT_BUILD >= TBC_START_BUILD ? "" : ", " + std::to_string(m_wander_distance)) + ", " + std::to_string(m_script_id) + ")";
         return txt;
     }
     SniffedEventType GetType() const final

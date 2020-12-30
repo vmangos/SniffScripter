@@ -5,10 +5,6 @@
 
 extern Database GameDb;
 
-#define CURRENT_PATCH   10
-#define CURRENT_BUILD   8606 // 2.4.3 (5875 - 1.12.1)
-#define TBC_START_BUILD 5610 // 2.0.0
-
 std::map<uint32, std::string> WorldDatabase::m_creatureNames;
 
 void WorldDatabase::LoadCreatures()
