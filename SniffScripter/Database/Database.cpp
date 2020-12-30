@@ -9,16 +9,15 @@
 #include <fstream>
 #include <sstream>
 
-// Keep track of how many database connections the 
+// Keep track of how many database connections
 size_t Database::m_stDatabaseCount = 0;
 
-Database::Database() : 
+Database::Database() :
     m_pMYSQL(nullptr),
     m_bQueriesTransaction(false),
     m_bCancelToken(false),
     m_bInit(false)
 {
-    
 }
 
 Database::~Database()
@@ -73,7 +72,7 @@ bool Database::Initialize(const char* infoString)
         printf("Database::Initialize - Could not initialize Mysql connection");
         return false;
     }
-        
+
     std::string strHost;
     std::string strPortOrSocket;
     std::string strUser;
@@ -94,11 +93,11 @@ bool Database::Initialize(const char* infoString)
     }
 
     mysql_options(pMyqlInit, MYSQL_SET_CHARSET_NAME, "utf8");
-    
+
     int32 port = 0;
 
     // Named pipe use option (Windows)
-    if (strHost == ".") 
+    if (strHost == ".")
     {
         uint32 opt = MYSQL_PROTOCOL_PIPE;
         mysql_options(pMyqlInit, MYSQL_OPT_PROTOCOL, (char const*)&opt);
@@ -134,7 +133,7 @@ bool Database::Initialize(const char* infoString)
     }
     else
     {
-        printf("Database::Initialize - Could not connect to MySQL database %s at %s\n", strDbName.c_str(),strHost.c_str());
+        printf("Database::Initialize - Could not connect to MySQL database %s at %s\n", strDbName.c_str(), strHost.c_str());
         mysql_close(pMyqlInit);
         return false;
     }
@@ -143,7 +142,7 @@ bool Database::Initialize(const char* infoString)
 void Database::WorkerThread()
 {
     // Cycle until m_bCancelToken variable is set to false.
-    //  However, we will also wait until we've finished emptying m_queueQueries. 
+    //  However, we will also wait until we've finished emptying m_queueQueries.
     //  Anything in that queue expected itself to be finished.
 
     while (true)
@@ -207,13 +206,13 @@ int32 Database::QueryInt32(const char* format, ...)
 std::shared_ptr<QueryResult> Database::LockedPerformQuery(const std::string strQuery)
 {
     std::lock_guard<std::mutex> lock(m_mutexMysql);
-    return PerformQuery(strQuery);    
+    return PerformQuery(strQuery);
 }
 
 std::shared_ptr<QueryResult> Database::PerformQuery(const std::string strQuery)
 {
     ASSERT(m_pMYSQL);
-    
+
     if (!RawMysqlQueryCall(strQuery))
         return nullptr;
 
@@ -254,7 +253,7 @@ void Database::CommitManyQueries()
     for (size_t i = 0; i < m_vTransactionQueries.size(); ++i)
         result.push_back(std::make_shared<QueryObj>(m_vTransactionQueries[i]));
 
-    // We anticipate that 
+    // We anticipate that
     m_queueQueries.pushMany(result);
 
     m_vTransactionQueries.clear();
@@ -271,7 +270,7 @@ bool Database::ExecuteQueryInstant(const char* format, ...)
 {
     if (!format || !m_pMYSQL)
         return false;
-    
+
     std::string strQuery;
     FORMAT_STRING_ARGS(format, strQuery, MAX_QUERY_LEN);
 
@@ -279,11 +278,11 @@ bool Database::ExecuteQueryInstant(const char* format, ...)
     return RawMysqlQueryCall(strQuery, true);
 }
 
-bool Database::QueueExecuteQuery(const char*  format,...)
+bool Database::QueueExecuteQuery(const char* format, ...)
 {
     if (!format || !m_pMYSQL)
         return false;
-    
+
     std::string strQuery;
     FORMAT_STRING_ARGS(format, strQuery, MAX_QUERY_LEN);
 
@@ -301,7 +300,7 @@ bool Database::QueueExecuteQuery(const char*  format,...)
 }
 
 bool Database::RawMysqlQueryCall(const std::string strQuery, const bool bDeleteGatheredData)
-{    
+{
     ASSERT(m_pMYSQL);
 
     if (mysql_query(m_pMYSQL, strQuery.c_str()))
@@ -332,9 +331,9 @@ void Database::EscapeString(std::string& str)
 
     char strResult[MAX_QUERY_LEN];
     ASSERT(str.size() < MAX_QUERY_LEN);
-    
+
     mysql_real_escape_string(m_pMYSQL, strResult, str.c_str(), str.size());
-    
+
     // Copy result.
     str = strResult;
 }
@@ -342,7 +341,7 @@ void Database::EscapeString(std::string& str)
 void Database::CallbackResult(const uint64 id, std::shared_ptr<CallbackQueryObj::ResultQueryHolder> result)
 {
     std::lock_guard<std::mutex> lock(m_mutexCallbackQueries);
-    
+
     auto itr = m_uoCallbackQueries.find(id);
 
     if (itr != m_uoCallbackQueries.end())

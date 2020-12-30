@@ -1,0 +1,4 @@
+Debug/
+.vs/
+SniffScripter/*.sql
+enc_temp_folder/

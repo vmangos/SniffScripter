@@ -53,7 +53,6 @@ void SniffDatabase::LoadCreatureSpawns()
     }
 }
 
-
 std::map<uint32, uint32> SniffDatabase::m_gameObjectGuidToEntry;
 
 void SniffDatabase::LoadGameObjectSpawns()
@@ -113,7 +112,6 @@ void SniffDatabase::LoadSpellCastStart(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_SpellCastStart> newEvent = std::make_shared<SniffedEvent_SpellCastStart>(spellId, casterGuid, casterId, casterType, targetGuid, targetId, targetType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -134,7 +132,6 @@ void SniffDatabase::LoadSpellCastGoHitTargets()
             target.m_entry = pFields[2].getUInt32();
             target.m_type = pFields[3].getCppString();
             m_spellGoHitTargets[listId].push_back(target);
-
         } while (result->NextRow());
     }
 }
@@ -166,7 +163,6 @@ void SniffDatabase::LoadSpellCastGo(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_SpellCastGo> newEvent = std::make_shared<SniffedEvent_SpellCastGo>(spellId, casterGuid, casterId, casterType, targetGuid, targetId, targetType, hitTargetsCount, hitTargetsListId);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -187,7 +183,6 @@ void SniffDatabase::LoadPlaySound(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_PlaySound> newEvent = std::make_shared<SniffedEvent_PlaySound>(soundId, sourceGuid, sourceId, sourceType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -205,7 +200,6 @@ void SniffDatabase::LoadPlayMusic(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_PlayMusic> newEvent = std::make_shared<SniffedEvent_PlayMusic>(musicId);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -234,7 +228,6 @@ void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereC
 
             std::shared_ptr<T> newEvent = std::make_shared<T>(guid, creatureId, value);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -259,7 +252,6 @@ void SniffDatabase::LoadCreatureText(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureText> newEvent = std::make_shared<SniffedEvent_CreatureText>(creatureGuid, creatureId, text, chatType, comment);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -286,8 +278,7 @@ void SniffDatabase::LoadCreatureMovement(char const* whereClause)
             uint64 unixtime = pFields[10].getUInt32();
 
             std::shared_ptr<SniffedEvent_CreatureMovement> newEvent = std::make_shared<SniffedEvent_CreatureMovement>(guid, creatureId, point, moveTime, startX, startY, startZ, endX, endY, endZ, orientation);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime*1000, newEvent));
-
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime * 1000, newEvent));
         } while (result->NextRow());
     }
 }
@@ -308,7 +299,6 @@ void SniffDatabase::LoadCreatureEmote(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureEmote> newEvent = std::make_shared<SniffedEvent_CreatureEmote>(guid, creatureId, emoteId, emoteName);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -330,7 +320,6 @@ void SniffDatabase::LoadCreatureAttackStart(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureAttackStart> newEvent = std::make_shared<SniffedEvent_CreatureAttackStart>(guid, creatureId, victimGuid, victimId, victimType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -352,7 +341,6 @@ void SniffDatabase::LoadCreatureAttackStop(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureAttackStop> newEvent = std::make_shared<SniffedEvent_CreatureAttackStop>(guid, creatureId, victimGuid, victimId, victimType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -371,7 +359,6 @@ void SniffDatabase::LoadCreatureDeath(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureDeath> newEvent = std::make_shared<SniffedEvent_CreatureDeath>(guid, creatureId);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -390,7 +377,6 @@ void SniffDatabase::LoadCreatureDestroy(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureDestroy> newEvent = std::make_shared<SniffedEvent_CreatureDestroy>(guid, creatureId);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -413,7 +399,6 @@ void SniffDatabase::LoadCreatureCreate2(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureCreate2> newEvent = std::make_shared<SniffedEvent_CreatureCreate2>(guid, creatureId, position_x, position_y, position_z, orientation);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -436,7 +421,6 @@ void SniffDatabase::LoadCreatureCreate1(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureCreate1> newEvent = std::make_shared<SniffedEvent_CreatureCreate1>(guid, creatureId, position_x, position_y, position_z, orientation);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -455,7 +439,6 @@ void SniffDatabase::LoadGameObjectDestroy(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_GameObjectDestroy> newEvent = std::make_shared<SniffedEvent_GameObjectDestroy>(guid, entry);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -478,7 +461,6 @@ void SniffDatabase::LoadGameObjectCreate2(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_GameObjectCreate2> newEvent = std::make_shared<SniffedEvent_GameObjectCreate2>(guid, entry, position_x, position_y, position_z, orientation);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -501,7 +483,6 @@ void SniffDatabase::LoadGameObjectCreate1(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_GameObjectCreate1> newEvent = std::make_shared<SniffedEvent_GameObjectCreate1>(guid, entry, position_x, position_y, position_z, orientation);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -525,7 +506,6 @@ void SniffDatabase::LoadGameObjectUpdate(char const* fieldName, char const* wher
 
             std::shared_ptr<T> newEvent = std::make_shared<T>(guid, entry, value);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -546,7 +526,6 @@ void SniffDatabase::LoadQuestAcceptTimes(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_QuestAccept> newEvent = std::make_shared<SniffedEvent_QuestAccept>(questId, objectGuid, objectId, objectType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -567,7 +546,6 @@ void SniffDatabase::LoadQuestCompleteTimes(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_QuestComplete> newEvent = std::make_shared<SniffedEvent_QuestComplete>(questId, objectGuid, objectId, objectType);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -586,7 +564,6 @@ void SniffDatabase::LoadCreatureInteractTimes(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_CreatureInteract> newEvent = std::make_shared<SniffedEvent_CreatureInteract>(guid, entry);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -605,7 +582,6 @@ void SniffDatabase::LoadGameObjectUseTimes(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_GameObjectUse> newEvent = std::make_shared<SniffedEvent_GameObjectUse>(guid, entry);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -623,7 +599,6 @@ void SniffDatabase::LoadItemUseTimes(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_ItemUse> newEvent = std::make_shared<SniffedEvent_ItemUse>(entry);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -640,7 +615,6 @@ void SniffDatabase::LoadClientReclaimCorpse(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_ReclaimCorpse> newEvent = std::make_shared<SniffedEvent_ReclaimCorpse>();
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -657,7 +631,6 @@ void SniffDatabase::LoadClientReleaseSpirit(char const* whereClause)
 
             std::shared_ptr<SniffedEvent_ReleaseSpirit> newEvent = std::make_shared<SniffedEvent_ReleaseSpirit>();
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
-
         } while (result->NextRow());
     }
 }
@@ -672,7 +645,6 @@ uint32 SniffDatabase::GetCreatureFieldValueBeforeTime(uint32 guid, uint64 unixti
             DbField* pFields = result->fetchCurrentRow();
 
             field = pFields[0].getUInt32();
-
         } while (result->NextRow());
     }
 
@@ -683,7 +655,6 @@ uint32 SniffDatabase::GetCreatureFieldValueBeforeTime(uint32 guid, uint64 unixti
             DbField* pFields = result->fetchCurrentRow();
 
             field = pFields[0].getUInt32();
-
         } while (result->NextRow());
     }
     return field;

@@ -5,6 +5,10 @@
 #include <string>
 #include "Common.h"
 
+#define CURRENT_PATCH   10
+#define CURRENT_BUILD   8606 // 2.4.3 (5875 - 1.12.1)
+#define TBC_START_BUILD 5610 // 2.0.0
+
 struct BroadcastText
 {
     BroadcastText(std::string maleText, std::string femaleText) : m_maleText(maleText), m_femaleText(femaleText) {};

@@ -5,16 +5,14 @@
 
 extern Database GameDb;
 
-#define CURRENT_PATCH 10
-#define CURRENT_BUILD 5875
-
 std::map<uint32, std::string> WorldDatabase::m_creatureNames;
 
 void WorldDatabase::LoadCreatures()
 {
     printf("Loading creature database.\n");
-    //                                                              0        1
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `name` FROM `creature_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `creature_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH))
+    //                                                                                             0        1
+    std::shared_ptr<QueryResult> result = CURRENT_BUILD >= TBC_START_BUILD ? GameDb.Query("SELECT `entry`, `name` FROM `creature_template`") : GameDb.Query("SELECT `entry`, `name` FROM `creature_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `creature_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH);
+    if (result)
     {
         do
         {
@@ -33,8 +31,9 @@ std::map<uint32, std::string> WorldDatabase::m_gameObjectNames;
 void WorldDatabase::LoadGameObjects()
 {
     printf("Loading gameobject database.\n");
-    //                                                              0        1
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `name` FROM `gameobject_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `gameobject_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH))
+    //                                                                                             0        1
+    std::shared_ptr<QueryResult> result = CURRENT_BUILD >= TBC_START_BUILD ? GameDb.Query("SELECT `entry`, `name` FROM `gameobject_template`") : GameDb.Query("SELECT `entry`, `name` FROM `gameobject_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `gameobject_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH);
+    if (result)
     {
         do
         {
@@ -53,8 +52,9 @@ std::map<uint32, std::string> WorldDatabase::m_itemNames;
 void WorldDatabase::LoadItems()
 {
     printf("Loading item database.\n");
-    //                                                              0        1
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `name` FROM `item_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `item_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH))
+    //                                                                                             0        1
+    std::shared_ptr<QueryResult> result = CURRENT_BUILD >= TBC_START_BUILD ? GameDb.Query("SELECT `entry`, `name` FROM `item_template`") : GameDb.Query("SELECT `entry`, `name` FROM `item_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `item_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH);
+    if (result)
     {
         do
         {
@@ -73,8 +73,9 @@ std::map<uint32, std::string> WorldDatabase::m_questNames;
 void WorldDatabase::LoadQuests()
 {
     printf("Loading quest database.\n");
-    //                                                              0        1
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `Title` FROM `quest_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `quest_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH))
+    //                                                                                             0        1
+    std::shared_ptr<QueryResult> result = CURRENT_BUILD >= TBC_START_BUILD ? GameDb.Query("SELECT `entry`, `Title` FROM `quest_template`") : GameDb.Query("SELECT `entry`, `Title` FROM `quest_template` t1 WHERE `patch`=(SELECT max(`patch`) FROM `quest_template` t2 WHERE t1.`entry`=t2.`entry` && `patch` <= %u)", CURRENT_PATCH);
+    if (result)
     {
         do
         {
@@ -93,8 +94,9 @@ std::map<uint32, std::string> WorldDatabase::m_spellNames;
 void WorldDatabase::LoadSpells()
 {
     printf("Loading spell database.\n");
-    //                                                              0        1
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `name` FROM `spell_template` t1 WHERE `build`=(SELECT max(`build`) FROM `spell_template` t2 WHERE t1.`entry`=t2.`entry` && `build` <= %u)", CURRENT_BUILD))
+    //                                                                                             0     1
+    std::shared_ptr<QueryResult> result = CURRENT_BUILD >= TBC_START_BUILD ? GameDb.Query("SELECT `Id`, `SpellName` FROM `spell_template`") : GameDb.Query("SELECT `entry`, `name` FROM `spell_template` t1 WHERE `build`=(SELECT max(`build`) FROM `spell_template` t2 WHERE t1.`entry`=t2.`entry` && `build` <= %u)", CURRENT_BUILD);
+    if (result)
     {
         do
         {
@@ -112,8 +114,15 @@ std::map<uint32, std::string> WorldDatabase::m_factionNames;
 
 void WorldDatabase::LoadFactions()
 {
+    if (CURRENT_BUILD >= TBC_START_BUILD)
+    {
+        printf("Skipped loading faction database due to non-Classic CURRENT_BUILD setting.\n");
+        return;
+    }
+    else
+        printf("Loading faction database.\n");
+
     std::map<uint32, std::string> factionNames;
-    printf("Loading faction database.\n");
     //                                                              0     1
     if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `id`, `name` FROM `faction` t1 WHERE `build`=(SELECT max(`build`) FROM `faction` t2 WHERE t1.`id`=t2.`id` && `build` <= %u)", CURRENT_BUILD))
     {
@@ -128,7 +137,8 @@ void WorldDatabase::LoadFactions()
         } while (result->NextRow());
     }
     printf("Loading faction template database.\n");
-    //                                                              0     1   
+
+    //                                                              0     1
     if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `id`, `faction_id` FROM `faction_template` t1 WHERE `build`=(SELECT max(`build`) FROM `faction_template` t2 WHERE t1.`id`=t2.`id` && `build` <= %u)", CURRENT_BUILD))
     {
         do
@@ -147,8 +157,15 @@ std::map<uint32, std::string> WorldDatabase::m_soundNames;
 
 void WorldDatabase::LoadSounds()
 {
-    printf("Loading sound database.\n");
-    //                                                              0     1    
+    if (CURRENT_BUILD >= TBC_START_BUILD)
+    {
+        printf("Skipped loading sound database due to non-Classic CURRENT_BUILD setting.\n");
+        return;
+    }
+    else
+        printf("Loading sound database.\n");
+
+    //                                                              0     1
     if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `id`, `name` FROM `sound_entries`"))
     {
         do
@@ -168,8 +185,9 @@ std::map<uint32, BroadcastText> WorldDatabase::m_broadcastTexts;
 void WorldDatabase::LoadBroadcastTexts()
 {
     printf("Loading broadcast text database.\n");
-    //                                                              0        1            2      
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `male_text`, `female_text` FROM `broadcast_text`"))
+    //                                                                                             0     1       2
+    std::shared_ptr<QueryResult> result = CURRENT_BUILD >= TBC_START_BUILD ? GameDb.Query("SELECT `Id`, `text`, `text1` FROM `broadcast_text`") : GameDb.Query("SELECT `entry`, `male_text`, `female_text` FROM `broadcast_text`");
+    if (result)
     {
         do
         {
