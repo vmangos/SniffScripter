@@ -92,6 +92,7 @@ enum SniffedEventType : uint8
     SE_CREATURE_UPDATE_UNIT_FLAGS,
     SE_GAMEOBJECT_CREATE1,
     SE_GAMEOBJECT_CREATE2,
+    SE_GAMEOBJECT_CUSTOM_ANIM,
     SE_GAMEOBJECT_DESTROY,
     SE_GAMEOBJECT_UPDATE_FLAGS,
     SE_GAMEOBJECT_UPDATE_STATE,
@@ -596,6 +597,27 @@ struct SniffedEvent_GameObjectCreate2 : SniffedEvent
     SniffedEventType GetType() const final
     {
         return SE_GAMEOBJECT_CREATE2;
+    }
+    KnownObject GetSourceObject() const final
+    {
+        return KnownObject(m_guid, m_entry, "GameObject");
+    }
+};
+
+struct SniffedEvent_GameObjectCustomAnim : SniffedEvent
+{
+    SniffedEvent_GameObjectCustomAnim(uint32 guid, uint32 entry, uint32 animId) : m_guid(guid), m_entry(entry), m_animId(animId) {};
+    uint32 m_guid = 0;
+    uint32 m_entry = 0;
+    uint32 m_animId = 0;
+    std::string ToString(bool /*singleLine*/) const final
+    {
+        std::string txt = "GameObject " + WorldDatabase::GetGameObjectName(m_entry) + " (Guid: " + std::to_string(m_guid) + " Entry: " + std::to_string(m_entry) + ") plays custom animation " + std::to_string(m_animId) + ".";
+        return txt;
+    }
+    SniffedEventType GetType() const final
+    {
+        return SE_GAMEOBJECT_CUSTOM_ANIM;
     }
     KnownObject GetSourceObject() const final
     {

@@ -14,8 +14,8 @@ std::vector<CreatureText> SniffDatabase::m_creatureTextTemplates;
 void SniffDatabase::LoadCreatureTextTemplate()
 {
     printf("Loading creature text database.\n");
-    //                                                              0              1           2       3            4
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `creature_id`, `group_id`, `text`, `chat_type`, `comment` FROM `%s`.`creature_text_template`", m_databaseName.c_str()))
+    //                                                              0        1           2       3            4
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `group_id`, `text`, `chat_type`, `comment` FROM `%s`.`creature_text_template`", m_databaseName.c_str()))
     {
         do
         {
@@ -78,9 +78,9 @@ std::map<uint32, std::string> SniffDatabase::m_playerNames;
 
 void SniffDatabase::LoadPlayerNames()
 {
-    printf("Loading characters database.\n");
+    printf("Loading player database.\n");
     //                                                              0       1
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `name` FROM `%s`.`characters`", m_databaseName.c_str()))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `name` FROM `%s`.`player`", m_databaseName.c_str()))
     {
         do
         {
@@ -241,7 +241,7 @@ void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereC
 
 void SniffDatabase::LoadCreatureText(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `guid`, `creature_id`, `group_id` FROM `%s`.`creature_text` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `guid`, `entry`, `group_id` FROM `%s`.`creature_text` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -266,7 +266,7 @@ void SniffDatabase::LoadCreatureText(char const* whereClause)
 
 void SniffDatabase::LoadCreatureMovement(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `point`, `move_time`, `start_position_x`, `start_position_y`, `start_position_z`, `end_position_x`, `end_position_y`, `end_position_z`, `orientation`, `unixtime` FROM `%s`.`creature_movement_server` WHERE %s ORDER BY `unixtime`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `point`, `move_time`, `start_position_x`, `start_position_y`, `start_position_z`, `end_position_x`, `end_position_y`, `end_position_z`, `orientation`, `unixtimems` FROM `%s`.`creature_movement_server` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -283,10 +283,10 @@ void SniffDatabase::LoadCreatureMovement(char const* whereClause)
             float endY = pFields[7].getFloat();
             float endZ = pFields[8].getFloat();
             float orientation = pFields[9].getFloat();
-            uint64 unixtime = pFields[10].getUInt32();
+            uint64 unixtimems = pFields[10].getUInt64();
 
             std::shared_ptr<SniffedEvent_CreatureMovement> newEvent = std::make_shared<SniffedEvent_CreatureMovement>(guid, creatureId, point, moveTime, startX, startY, startZ, endX, endY, endZ, orientation);
-            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtime*1000, newEvent));
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());
     }
@@ -500,6 +500,26 @@ void SniffDatabase::LoadGameObjectCreate1(char const* whereClause)
             float orientation = pFields[5].getFloat();
 
             std::shared_ptr<SniffedEvent_GameObjectCreate1> newEvent = std::make_shared<SniffedEvent_GameObjectCreate1>(guid, entry, position_x, position_y, position_z, orientation);
+            TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
+
+        } while (result->NextRow());
+    }
+}
+
+void SniffDatabase::LoadGameObjectCustomAnim(char const* whereClause)
+{
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `anim_id`, `unixtimems` FROM `%s`.`gameobject_custom_anim` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 guid = pFields[0].getUInt32();
+            uint32 entry = GetGameObjectEntryFromGuid(guid);
+            uint32 animId = pFields[1].getUInt32();
+            uint64 unixtimems = pFields[2].getUInt64();
+
+            std::shared_ptr<SniffedEvent_GameObjectCustomAnim> newEvent = std::make_shared<SniffedEvent_GameObjectCustomAnim>(guid, entry, animId);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
 
         } while (result->NextRow());

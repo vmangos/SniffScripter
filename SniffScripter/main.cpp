@@ -66,6 +66,63 @@ enum
     OPTION_BREAKDOWN_UNIT_FLAGS     = 7,
 };
 
+void AskAboutClientEvents(bool& showReclaimCorpse, bool& showReleaseSpirit, bool& showQuests, bool& showCreatureInteract, bool& showGameObjectUse, bool& showUseItem)
+{
+    printf("Show when client reclaimed his corpse? (y/n)\n> ");
+    showReclaimCorpse = GetChar() == 'y';
+
+    printf("Show when client released his spirit? (y/n)\n> ");
+    showReleaseSpirit = GetChar() == 'y';
+
+    printf("Show when client accepted or turned in quests? (y/n)\n> ");
+    showQuests = GetChar() == 'y';
+
+    printf("Show when client interacted with creatures? (y/n)\n> ");
+    showCreatureInteract = GetChar() == 'y';
+
+    printf("Show when client used gameobjects? (y/n)\n> ");
+    showGameObjectUse = GetChar() == 'y';
+
+    printf("Show when client used items? (y/n)\n> ");
+    showUseItem = GetChar() == 'y';
+}
+
+void AskAboutCreatureEvents(bool& showCreatureDeaths, bool& showCreatureAttacks, bool& showCreatureTexts, bool& showCreatureEmotes, bool& showCreatureMoves, bool& showCreatureCasts, bool& showCreatureUpdates)
+{
+    printf("Show when creatures died? (y/n)\n> ");
+    showCreatureDeaths = GetChar() == 'y';
+
+    printf("Show when creatures attacked something? (y/n)\n> ");
+    showCreatureAttacks = GetChar() == 'y';
+
+    printf("Show when creatures said something? (y/n)\n> ");
+    showCreatureTexts = GetChar() == 'y';
+
+    printf("Show when creatures played an emote? (y/n)\n> ");
+    showCreatureEmotes = GetChar() == 'y';
+
+    printf("Show when creatures moved? (y/n)\n> ");
+    showCreatureMoves = GetChar() == 'y';
+
+    printf("Show when creatures casted spells? (y/n)\n> ");
+    showCreatureCasts = GetChar() == 'y';
+
+    printf("Show changes to creature update fields? (y/n)\n> ");
+    showCreatureUpdates = GetChar() == 'y';
+}
+
+void AskAboutGameObjectEvents(bool& showGameObjectCustomAnims, bool& showGameObjectCasts, bool& showGameObjectUpdates)
+{
+    printf("Show when gameobjects played a custom animation? (y/n)\n> ");
+    showGameObjectCustomAnims = GetChar() == 'y';
+
+    printf("Show when gameobjects casted spells? (y/n)\n> ");
+    showGameObjectCasts = GetChar() == 'y';
+
+    printf("Show changes to gameobject update fields? (y/n)\n> ");
+    showGameObjectUpdates = GetChar() == 'y';
+}
+
 int main()
 {
     printf("Options:\n");
@@ -135,44 +192,33 @@ int main()
                 return 1;
             }
 
-            printf("Show when client reclaimed his corpse? (y/n)\n> ");
-            bool showReclaimCorpse = GetChar() == 'y';
+            bool showReclaimCorpse = false;
+            bool showReleaseSpirit = false;
+            bool showQuests = false;
+            bool showCreatureInteract = false;
+            bool showGameObjectUse = false;
+            bool showUseItem = false;
+            printf("Show client related events (y/n)\n> ");
+            if (GetChar() == 'y')
+                AskAboutClientEvents(showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem);
 
-            printf("Show when client released his spirit? (y/n)\n> ");
-            bool showReleaseSpirit = GetChar() == 'y';
+            bool showCreatureDeaths = false;
+            bool showCreatureAttacks = false;
+            bool showCreatureTexts = false;
+            bool showCreatureEmotes = false;
+            bool showCreatureMoves = false;
+            bool showCreatureCasts = false;
+            bool showCreatureUpdates = false;
+            printf("Show creature related events? (y/n)\n> ");
+            if (GetChar() == 'y')
+                AskAboutCreatureEvents(showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates);
 
-            printf("Show when client accepted or turned in quests? (y/n)\n> ");
-            bool showQuests = GetChar() == 'y';
-
-            printf("Show when client interacted with creatures? (y/n)\n> ");
-            bool showCreatureInteract = GetChar() == 'y';
-
-            printf("Show when client used gameobjects? (y/n)\n> ");
-            bool showGameObjectUse = GetChar() == 'y';
-
-            printf("Show when client used items? (y/n)\n> ");
-            bool showUseItem = GetChar() == 'y';
-
-            printf("Show when creatures died? (y/n)\n> ");
-            bool showDeaths = GetChar() == 'y';
-
-            printf("Show when creatures attacked something? (y/n)\n> ");
-            bool showAttacks = GetChar() == 'y';
-
-            printf("Show when creatures said something? (y/n)\n> ");
-            bool showTexts = GetChar() == 'y';
-
-            printf("Show when creatures played an emote? (y/n)\n> ");
-            bool showEmotes = GetChar() == 'y';
-
-            printf("Show when creatures moved? (y/n)\n> ");
-            bool showMoves = GetChar() == 'y';
-
-            printf("Show spell casts? (y/n)\n> ");
-            bool showCasts = GetChar() == 'y';
-
-            printf("Show changes to update fields? (y/n)\n> ");
-            bool showUpdates = GetChar() == 'y';
+            bool showGameObjectCustomAnims = false;
+            bool showGameObjectCasts = false;
+            bool showGameObjectUpdates = false;
+            printf("Show gameobject related events? (y/n)\n> ");
+            if (GetChar() == 'y')
+                AskAboutGameObjectEvents(showGameObjectCustomAnims, showGameObjectCasts, showGameObjectUpdates);
 
             printf("Show when sounds or music played? (y/n)\n> ");
             bool showSounds = GetChar() == 'y';
@@ -180,27 +226,24 @@ int main()
             printf("Start time: ");
             uint32 uiStartTime = GetUInt32();
 
-            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem, showDeaths, showAttacks, showTexts, showEmotes, showMoves, showUpdates, showCasts, showSounds);
+            TimelineMaker::CreateTimelineForGuids(uiStartTime, vCreatureGuids, vGameObjectGuids, showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem, showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureUpdates, showCreatureCasts, showGameObjectCustomAnims, showGameObjectUpdates, showGameObjectCasts, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
             return 0;
         }
         else if (option == OPTION_TIMELINE_ALL_EVENTS)
         {
-            printf("Show when client reclaimed his corpse? (y/n)\n> ");
-            bool showReclaimCorpse = GetChar() == 'y';
-
-            printf("Show when client released his spirit? (y/n)\n> ");
-            bool showReleaseSpirit = GetChar() == 'y';
-
-            printf("Show when client accepted or turned in quests? (y/n)\n> ");
-            bool showQuests = GetChar() == 'y';
-
-            printf("Show when client used items? (y/n)\n> ");
-            bool showUseItem = GetChar() == 'y';
+            bool showReclaimCorpse = false;
+            bool showReleaseSpirit = false;
+            bool showQuests = false;
+            bool showCreatureInteract = false;
+            bool showGameObjectUse = false;
+            bool showUseItem = false;
+            printf("Show client related events (y/n)\n> ");
+            if (GetChar() == 'y')
+                AskAboutClientEvents(showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem);
 
             printf("Show creature related events? (y/n)\n> ");
             bool showCreatures = GetChar() == 'y';
-            bool showCreatureInteract = false;
             bool showCreatureDeaths = false;
             bool showCreatureAttacks = false;
             bool showCreatureTexts = false;
@@ -209,48 +252,15 @@ int main()
             bool showCreatureCasts = false;
             bool showCreatureUpdates = false;
             if (showCreatures)
-            {
-                printf("Show when client interacted with creatures? (y/n)\n> ");
-                showCreatureInteract = GetChar() == 'y';
-
-                printf("Show when creatures died? (y/n)\n> ");
-                showCreatureDeaths = GetChar() == 'y';
-
-                printf("Show when creatures attacked something? (y/n)\n> ");
-                showCreatureAttacks = GetChar() == 'y';
-
-                printf("Show when creatures said something? (y/n)\n> ");
-                showCreatureTexts = GetChar() == 'y';
-
-                printf("Show when creatures played an emote? (y/n)\n> ");
-                showCreatureEmotes = GetChar() == 'y';
-
-                printf("Show when creatures moved? (y/n)\n> ");
-                showCreatureMoves = GetChar() == 'y';
-
-                printf("Show when creatures casted spells? (y/n)\n> ");
-                showCreatureCasts = GetChar() == 'y';
-
-                printf("Show changes to creature update fields? (y/n)\n> ");
-                showCreatureUpdates = GetChar() == 'y';
-            }
+                AskAboutCreatureEvents(showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates);
             
             printf("Show gameobject related events? (y/n)\n> ");
             bool showGameObjects = GetChar() == 'y';
-            bool showGameObjectUse = false;
+            bool showGameObjectCustomAnims = false;
             bool showGameObjectCasts = false;
             bool showGameObjectUpdates = false;
             if (showGameObjects)
-            {
-                printf("Show when client used gameobjects? (y/n)\n> ");
-                showGameObjectUse = GetChar() == 'y';
-
-                printf("Show when gameobjects casted spells? (y/n)\n> ");
-                showGameObjectCasts = GetChar() == 'y';
-
-                printf("Show changes to gameobject update fields? (y/n)\n> ");
-                showGameObjectUpdates = GetChar() == 'y';
-            }
+                AskAboutGameObjectEvents(showGameObjectCustomAnims, showGameObjectCasts, showGameObjectUpdates);
 
             printf("Show when sounds or music played? (y/n)\n> ");
             bool showSounds = GetChar() == 'y';
@@ -265,7 +275,7 @@ int main()
             else
                 uiEndTime = UINT32_MAX;
 
-            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showReclaimCorpse, showReleaseSpirit, showQuests, showUseItem, showCreatures, showCreatureInteract, showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectUse, showGameObjectCasts, showGameObjectUpdates, showSounds);
+            TimelineMaker::CreateTimelineForAll(uiStartTime, uiEndTime, showReclaimCorpse, showReleaseSpirit, showQuests, showUseItem, showCreatures, showCreatureInteract, showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates, showGameObjects, showGameObjectUse, showGameObjectCustomAnims, showGameObjectCasts, showGameObjectUpdates, showSounds);
             TimelineMaker::PromptTimelineSaveMethod(uiStartTime);
             return 0;
         }
@@ -275,7 +285,60 @@ int main()
             if (uint32 guid = GetUInt32())
             {
                 printf("Use start position instead of destination? (y/n)\n> ");
-                TimelineMaker::CreateWaypoints(guid, GetChar() == 'y');
+                bool useStartPosition = GetChar() == 'y';
+
+                std::vector<uint32> vCreatureGuids;
+                std::vector<uint32> vGameObjectGuids;
+
+                printf("Do you want to also show events for another creature guid? (y/n)\n> ");
+                while (GetChar() == 'y')
+                {
+                    printf("Guid: ");
+                    if (uint32 id = GetUInt32())
+                        vCreatureGuids.push_back(id);
+                    printf("Do you want to enter another creature guid? (y/n)\n> ");
+                }
+
+                printf("Do you want to also show events for another gameobject guid? (y/n)\n> ");
+                while (GetChar() == 'y')
+                {
+                    printf("Guid: ");
+                    if (uint32 id = GetUInt32())
+                        vGameObjectGuids.push_back(id);
+                    printf("Do you want to enter another gameobject guid? (y/n)\n> ");
+                }
+
+                bool showReclaimCorpse = false;
+                bool showReleaseSpirit = false;
+                bool showQuests = false;
+                bool showCreatureInteract = false;
+                bool showGameObjectUse = false;
+                bool showUseItem = false;
+                printf("Show client related events (y/n)\n> ");
+                if (GetChar() == 'y')
+                    AskAboutClientEvents(showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem);
+
+                bool showCreatureDeaths = false;
+                bool showCreatureAttacks = false;
+                bool showCreatureTexts = false;
+                bool showCreatureEmotes = false;
+                bool showCreatureMoves = false;
+                bool showCreatureCasts = false;
+                bool showCreatureUpdates = false;
+                if (!vCreatureGuids.empty())
+                    AskAboutCreatureEvents(showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates);
+
+                bool showGameObjectCustomAnims = false;
+                bool showGameObjectCasts = false;
+                bool showGameObjectUpdates = false;
+                if (!vGameObjectGuids.empty())
+                    AskAboutGameObjectEvents(showGameObjectCustomAnims, showGameObjectCasts, showGameObjectUpdates);
+
+                printf("Show when sounds or music played? (y/n)\n> ");
+                bool showSounds = GetChar() == 'y';
+
+                TimelineMaker::CreateTimelineForGuids(0, vCreatureGuids, vGameObjectGuids, showReclaimCorpse, showReleaseSpirit, showQuests, showCreatureInteract, showGameObjectUse, showUseItem, showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureUpdates, showCreatureCasts, showGameObjectCustomAnims, showGameObjectUpdates, showGameObjectCasts, showSounds);
+                TimelineMaker::CreateWaypoints(guid, useStartPosition, showCreatureInteract);
                 if (uint32 count = TimelineMaker::SaveWaypointsToFile())
                 {
                     printf("Saved %u points to file.", count);

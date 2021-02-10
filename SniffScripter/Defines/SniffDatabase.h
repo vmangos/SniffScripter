@@ -52,6 +52,7 @@ public:
     static void LoadGameObjectDestroy(char const* whereClause);
     static void LoadGameObjectCreate2(char const* whereClause);
     static void LoadGameObjectCreate1(char const* whereClause);
+    static void LoadGameObjectCustomAnim(char const* whereClause);
     template <class T>
     static void LoadGameObjectUpdate(char const* fieldName, char const* whereClause);
     static void LoadQuestAcceptTimes(char const* whereClause);
