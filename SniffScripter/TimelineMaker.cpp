@@ -1726,3 +1726,225 @@ void TimelineMaker::GetScriptInfoFromSniffedEvent(uint64 unixtimems, std::shared
         scriptActions.push_back(script);
     }
 }
+
+static float GetArmor(float damage, float originalDamage, float level)
+{
+    return (-85.0f * damage * level - 400 * damage + 85.0f * level * originalDamage + 400 * originalDamage) / damage;
+}
+
+void TimelineMaker::CalculateCreatureArmor(uint32 entry)
+{
+    std::map<uint32 /*guid*/, uint32 /*level*/> creatureLevel;
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `level` FROM `%s`.`creature` WHERE `id`=%u", SniffDatabase::m_databaseName.c_str(), entry))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 guid = pFields[0].getUInt32();
+            uint32 level = pFields[1].getUInt32();
+            creatureLevel[guid] = level;
+            
+        } while (result->NextRow());
+    }
+
+    //                                                              0       1              2           3         4
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `victim_guid`, `hit_info`, `damage`, `original_damage` FROM `%s`.`player_attack_log` WHERE `victim_type`='Creature' && `victim_id`=%u && `total_school_mask`=1 && `overkill_damage` = -1 && `total_absorbed_damage`=0 && `total_resisted_damage`=0 && `blocked_damage`=0 && `damage`<`original_damage` ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), entry))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 attackerGuid = pFields[0].getUInt32();
+            uint32 victimGuid = pFields[1].getUInt32();
+            uint32 hitInfo = pFields[2].getUInt32();
+            uint32 damage = pFields[3].getUInt32();
+            uint32 originalDamage = pFields[4].getUInt32();
+            uint32 level = creatureLevel[victimGuid];
+            uint32 armor = GetArmor(damage, originalDamage, level);
+
+            if (hitInfo & (HITINFO_CRITICALHIT | HITINFO_GLANCING | HITINFO_CRUSHING))
+                continue;
+
+            printf("Attacker: %s\n", SniffDatabase::GetPlayerName(attackerGuid).c_str());
+            printf("Level: %u\n", level);
+            printf("Hit Info: %u (%s)\n", hitInfo, GetHitInfoNames(hitInfo).c_str());
+            printf("Damage: %u (%u clean)\n", damage, originalDamage);
+            printf("Calculated Armor: %u\n\n", armor);
+            getchar();
+
+        } while (result->NextRow());
+    }
+}
+
+void TimelineMaker::CalculateCreatureSpellTimers(uint32 entry)
+{
+    printf("Select spell to calculate timers for:\n");
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT DISTINCT `spell_id` FROM `%s`.`spell_cast_start` WHERE `caster_id`=%u && `caster_type`='Creature'", SniffDatabase::m_databaseName.c_str(), entry))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 spellId = pFields[0].getUInt32();
+            printf("- %s (%u)\n", WorldDatabase::GetSpellName(spellId).c_str(), spellId);
+
+        } while (result->NextRow());
+    }
+
+    printf("> ");
+    uint32 spellId = GetUInt32();
+    if (spellId)
+        CalculateTimersForSpell(entry, spellId);
+}
+
+struct CreatureState
+{
+    uint32 guid = 0;
+    bool inCombat = false;
+    bool spellCasted = false;
+    uint64 lastEventTime = 0;
+};
+
+void PrintSpellTimers(std::vector<uint64>& timers)
+{
+    uint64 minimum = UINT64_MAX;
+    uint64 maximum = 0;
+    std::string fullList;
+
+    for (auto diff : timers)
+    {
+        if (diff > maximum)
+            maximum = diff;
+        if (diff < minimum)
+            minimum = diff;
+
+        if (!fullList.empty())
+            fullList += ", ";
+        fullList += std::to_string(diff);
+    }
+
+    printf("Minimum = %llu\n", minimum);
+    printf("Maximum = %llu\n", maximum);
+    printf("All = %s\n", fullList.c_str());
+}
+
+void TimelineMaker::CalculateTimersForSpell(uint32 creatureId, uint32 spellId)
+{
+    std::map<uint32, CreatureState> creatures;
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `is_spawn`, `unit_flags`, (SELECT MIN(unixtimems) FROM `%s`.creature_create1_time WHERE `guid`=t1.`guid`), (SELECT MIN(unixtimems) FROM `%s`.creature_create2_time WHERE `guid`=t1.`guid`) FROM `%s`.`creature` t1 WHERE `id`=%u", SniffDatabase::m_databaseName.c_str(), SniffDatabase::m_databaseName.c_str(), SniffDatabase::m_databaseName.c_str(), creatureId))
+    {
+        do
+        {
+            DbField* pFields = result->fetchCurrentRow();
+
+            uint32 guid = pFields[0].getUInt32();
+            bool isSpawn = pFields[1].getBool();
+            uint32 unitFlags = pFields[2].getUInt32();
+            
+            CreatureState creature;
+            creature.guid = guid;
+            creature.inCombat = (unitFlags & UNIT_FLAG_IN_COMBAT) ? true : false;
+            creature.spellCasted = (unitFlags & UNIT_FLAG_IN_COMBAT) && !isSpawn ? true : false;
+
+            if (isSpawn)
+                creature.lastEventTime = pFields[4].getUInt64();
+            else
+                creature.lastEventTime = pFields[3].getUInt64();
+
+            creatures[guid] = creature;
+
+        } while (result->NextRow());
+    }
+
+    // Load unit flags to know when mob entered combat.
+    for (auto const& itr : creatures)
+    {
+        char whereClause[128] = {};
+        snprintf(whereClause, 127, "(`guid` = %u)", itr.first);
+        SniffDatabase::LoadCreatureUpdate<SniffedEvent_CreatureUpdate_unit_flags>("unit_flags", whereClause);
+    }
+
+    {
+        char whereClause[128] = {};
+        snprintf(whereClause, 127, "(`caster_id`=%u) && (`caster_type`='Creature') && (`spell_id`=%u)", creatureId, spellId);
+        SniffDatabase::LoadSpellCastStart(whereClause);
+    }
+
+    std::vector<uint64> initialTimers;
+    std::vector<uint64> repeatTimers;
+
+    for (const auto& itr : m_eventsMap)
+    {
+        uint32 guid = itr.second->GetSourceObject().m_guid;
+        auto itr2 = creatures.find(guid);
+        if (itr2 == creatures.end())
+        {
+            printf("Error: Guid %u is not loaded!\n", guid);
+            continue;
+        }
+
+        if (itr.second->GetType() == SE_CREATURE_UPDATE_UNIT_FLAGS)
+        {
+            auto sniffedEvent = std::static_pointer_cast<SniffedEvent_CreatureUpdate_unit_flags>(itr.second);
+            if (sniffedEvent->m_value & UNIT_FLAG_IN_COMBAT)
+                itr2->second.inCombat = true;
+            else
+            {
+                itr2->second.inCombat = false;
+                itr2->second.spellCasted = false;
+            }
+        }
+        else if (itr.second->GetType() == SE_SPELL_CAST_START)
+        {
+            auto sniffedEvent = std::static_pointer_cast<SniffedEvent_SpellCastStart>(itr.second);
+            if (sniffedEvent->m_spellId != spellId)
+            {
+                printf("Error: Wrong spell Id in timeline!\n");
+                continue;
+            }
+
+            uint64 diff = itr.first - itr2->second.lastEventTime;
+            if (!itr2->second.inCombat)
+                diff = 0;
+
+            if (itr2->second.spellCasted)
+                repeatTimers.push_back(diff);
+            else
+                initialTimers.push_back(diff);
+
+            itr2->second.spellCasted = true;
+        }
+        else
+        {
+            printf("Error: Unhandled event in timeline!\n");
+            continue;
+        }
+
+        itr2->second.lastEventTime = itr.first;
+    }
+
+    printf("\n");
+
+    if (!initialTimers.empty())
+    {
+        printf("Initial timers:\n");
+        PrintSpellTimers(initialTimers);
+        printf("\n");
+    }
+    else
+        printf("No initial casts data.\n");
+
+    getchar();
+
+    if (!repeatTimers.empty())
+    {
+        printf("Repeat timers:\n");
+        PrintSpellTimers(repeatTimers);
+        printf("\n");
+    }
+    else
+        printf("No repeat casts data.\n");
+
+    getchar();
+}

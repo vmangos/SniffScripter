@@ -28,6 +28,11 @@ public:
     static uint32 GetTemporaryIdForUnknownBroadcastText(std::string text);
     static std::vector<std::string> m_unknownScriptTexts;
 
+    static void CalculateCreatureArmor(uint32 entry);
+
+    static void CalculateCreatureSpellTimers(uint32 entry);
+    static void CalculateTimersForSpell(uint32 creatureId, uint32 spellId);
+
     static std::multimap<uint64, std::shared_ptr<SniffedEvent>> m_eventsMap;
 };
 

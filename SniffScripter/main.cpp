@@ -62,8 +62,10 @@ enum
     OPTION_TIMELINE_WAYPOINTS       = 3,
     OPTION_GENERATE_SCRIPT          = 4,
     OPTION_QUESTS_WITH_RP_EVENTS    = 5,
-    OPTION_BREAKDOWN_NPC_FLAGS      = 6,
-    OPTION_BREAKDOWN_UNIT_FLAGS     = 7,
+    OPTION_CALCULATE_ARMOR          = 6,
+    OPTION_SPELL_TIMERS             = 7,
+    OPTION_BREAKDOWN_NPC_FLAGS      = 8,
+    OPTION_BREAKDOWN_UNIT_FLAGS     = 9,
 };
 
 void AskAboutClientEvents(bool& showReclaimCorpse, bool& showReleaseSpirit, bool& showQuests, bool& showCreatureInteract, bool& showGameObjectUse, bool& showUseItem)
@@ -131,8 +133,10 @@ int main()
     printf("3. Create waypoints and show events as comments\n");
     printf("4. Create database script from selected events\n");
     printf("5. List quests with RP events\n");
-    printf("6. Breakdown NPC Flags\n");
-    printf("7. Breakdown Unit Flags\n");
+    printf("6. Calculate creature armor\n");
+    printf("7. Calculate spell timers\n");
+    printf("8. Breakdown NPC Flags\n");
+    printf("9. Breakdown Unit Flags\n");
     printf("> ");
 
     uint32 option = GetUInt32();
@@ -141,7 +145,9 @@ int main()
         option == OPTION_TIMELINE_ALL_EVENTS ||
         option == OPTION_TIMELINE_WAYPOINTS ||
         option == OPTION_QUESTS_WITH_RP_EVENTS ||
-        option == OPTION_GENERATE_SCRIPT)
+        option == OPTION_GENERATE_SCRIPT || 
+        option == OPTION_CALCULATE_ARMOR ||
+        option == OPTION_SPELL_TIMERS)
     {
         printf("\nEnter your database connection info.\n");
         std::string const connection_string = MakeConnectionString();
@@ -378,6 +384,25 @@ int main()
                 if (!TimelineMaker::FindQuestsWithRpEvents(duration))
                     printf("No quests with scripted events found.\n");
                 GetChar();
+                return 0;
+            }
+        }
+        else if (option == OPTION_CALCULATE_ARMOR)
+        {
+            printf("Creature Id: ");
+            if (uint32 entry = GetUInt32())
+            {
+                TimelineMaker::CalculateCreatureArmor(entry);
+                printf("End of melee attack log data.");
+                return 0;
+            }
+        }
+        else if (option == OPTION_SPELL_TIMERS)
+        {
+            printf("Creature Id: ");
+            if (uint32 entry = GetUInt32())
+            {
+                TimelineMaker::CalculateCreatureSpellTimers(entry);
                 return 0;
             }
         }
