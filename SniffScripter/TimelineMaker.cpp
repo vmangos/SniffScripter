@@ -666,7 +666,7 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition, bool alr
     if (!useStartPosition)
     {
         //                                                              0               1               2             3             4
-        if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `parent_point`, `spline_point`, `position_x`, `position_y`, `position_z` FROM `%s`.`creature_movement_server_spline` WHERE `guid`=%u", SniffDatabase::m_databaseName.c_str(), guid))
+        if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `parent_point`, `spline_point`, format(`position_x`, 6), format(`position_y`, 6), format(`position_z`, 6) FROM `%s`.`creature_movement_server_spline` WHERE `guid`=%u", SniffDatabase::m_databaseName.c_str(), guid))
         {
             do
             {
@@ -675,10 +675,10 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition, bool alr
                 CreatureSplineData spline;
                 uint32 parent_point = pFields[0].getUInt32();
                 spline.spline_point = pFields[1].getUInt32();
-
-                spline.position_x = pFields[2].getFloat();
-                spline.position_y = pFields[3].getFloat();
-                spline.position_z = pFields[4].getFloat();
+                
+                spline.position_x = atof(ReplaceString(pFields[2].getCppString(), ",", "").c_str()) ;
+                spline.position_y = atof(ReplaceString(pFields[3].getCppString(), ",", "").c_str());
+                spline.position_z = atof(ReplaceString(pFields[4].getCppString(), ",", "").c_str());
 
                 splinesMap[parent_point].push_back(spline);
             } while (result->NextRow());
@@ -699,8 +699,8 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition, bool alr
 
     uint32 firstMoveTime = 0;
 
-    //                                                              0       1        2            3               4               5                   6                   7                   8                 9                 10                11             12
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `point`, `move_time`, `spline_flags`, `spline_count`, `start_position_x`, `start_position_y`, `start_position_z`, `end_position_x`, `end_position_y`, `end_position_z`, `orientation`, `unixtimems` FROM `%s`.`creature_movement_server` WHERE `guid`=%u", SniffDatabase::m_databaseName.c_str(), guid))
+    //                                                              0       1        2            3               4              5                              6                              7                              8                            9                            10                           11                         12
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `guid`, `point`, `move_time`, `spline_flags`, `spline_count`, format(`start_position_x`, 6), format(`start_position_y`, 6), format(`start_position_z`, 6), format(`end_position_x`, 6), format(`end_position_y`, 6), format(`end_position_z`, 6), format(`orientation`, 6), `unixtimems` FROM `%s`.`creature_movement_server` WHERE `guid`=%u", SniffDatabase::m_databaseName.c_str(), guid))
     {
         uint32 pointCounter = 1;
         std::shared_ptr<SniffedEvent_VmangosWaypoints> lastPoint = nullptr;
@@ -718,14 +718,14 @@ void TimelineMaker::CreateWaypoints(uint32 guid, bool useStartPosition, bool alr
             //uint32 const spline_flags = pFields[3].getUInt32();
             uint32 const spline_count = pFields[4].getUInt32();
 
-            float const start_position_x = pFields[5].getFloat();
-            float const start_position_y = pFields[6].getFloat();
-            float const start_position_z = pFields[7].getFloat();
+            float const start_position_x = atof(ReplaceString(pFields[5].getCppString(), ",", "").c_str());
+            float const start_position_y = atof(ReplaceString(pFields[6].getCppString(), ",", "").c_str());
+            float const start_position_z = atof(ReplaceString(pFields[7].getCppString(), ",", "").c_str());
 
-            float const end_position_x = pFields[8].getFloat();
-            float const end_position_y = pFields[9].getFloat();
-            float const end_position_z = pFields[10].getFloat();
-            float const final_orientation = pFields[11].getFloat();
+            float const end_position_x = atof(ReplaceString(pFields[8].getCppString(), ",", "").c_str());
+            float const end_position_y = atof(ReplaceString(pFields[9].getCppString(), ",", "").c_str());
+            float const end_position_z = atof(ReplaceString(pFields[10].getCppString(), ",", "").c_str());
+            float const final_orientation = atof(ReplaceString(pFields[11].getCppString(), ",", "").c_str());
 
             uint32 unixtime = pFields[12].getUInt64() / 1000;
 
