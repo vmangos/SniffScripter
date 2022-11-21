@@ -21,13 +21,11 @@ class SniffDatabase
 public:
     static std::string m_databaseName;
 
-    static void LoadCreatureTextTemplate();
     static void LoadCreatureSpawns();
     static void LoadGameObjectSpawns();
     static void LoadPlayerNames();
     static void LoadSniffDatabase()
     {
-        LoadCreatureTextTemplate();
         LoadCreatureSpawns();
         LoadGameObjectSpawns();
         LoadPlayerNames();
@@ -63,15 +61,6 @@ public:
     static void LoadClientReclaimCorpse(char const* whereClause);
     static void LoadClientReleaseSpirit(char const* whereClause);
 
-    static CreatureText const* GetCreatureTextTemplate(uint32 creatureId, uint32 groupId)
-    {
-        for (auto const& itr : m_creatureTextTemplates)
-        {
-            if (itr.creatureId == creatureId && itr.groupId == groupId)
-                return &itr;
-        }
-        return nullptr;
-    }
     static std::vector<KnownObject>* GetSpellGoHitTargets(uint32 listId)
     {
         auto const itr = m_spellGoHitTargets.find(listId);
@@ -92,7 +81,6 @@ public:
     static uint32 GetCreatureEntryFromGuid(uint32 guid) { return m_creatureGuidToEntry[guid]; }
     static uint32 GetGameObjectEntryFromGuid(uint32 guid) { return m_gameObjectGuidToEntry[guid]; }
 private:
-    static std::vector<CreatureText> m_creatureTextTemplates;
     static std::map<uint32, uint32> m_creatureGuidToEntry;
     static std::map<uint32, uint32> m_gameObjectGuidToEntry;
     static std::map<uint32, std::vector<KnownObject>> m_spellGoHitTargets;

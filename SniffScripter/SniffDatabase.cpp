@@ -9,29 +9,6 @@
 extern Database GameDb;
 
 std::string SniffDatabase::m_databaseName;
-std::vector<CreatureText> SniffDatabase::m_creatureTextTemplates;
-
-void SniffDatabase::LoadCreatureTextTemplate()
-{
-    printf("Loading creature text database.\n");
-    //                                                              0        1           2       3            4
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `entry`, `group_id`, `text`, `chat_type`, `comment` FROM `%s`.`creature_text_template`", m_databaseName.c_str()))
-    {
-        do
-        {
-            DbField* pFields = result->fetchCurrentRow();
-
-            CreatureText textEntry;
-            textEntry.creatureId = pFields[0].getUInt32();
-            textEntry.groupId = pFields[1].getUInt32();
-            textEntry.text = pFields[2].getCppString();
-            textEntry.chatType = pFields[3].getUInt32();
-            textEntry.comment = pFields[4].getCppString();
-
-            m_creatureTextTemplates.emplace_back(std::move(textEntry));
-        } while (result->NextRow());
-    }
-}
 
 std::map<uint32, uint32> SniffDatabase::m_creatureGuidToEntry;
 
@@ -241,7 +218,7 @@ void SniffDatabase::LoadCreatureUpdate(char const* fieldName, char const* whereC
 
 void SniffDatabase::LoadCreatureText(char const* whereClause)
 {
-    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `guid`, `entry`, `group_id` FROM `%s`.`creature_text` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
+    if (std::shared_ptr<QueryResult> result = GameDb.Query("SELECT `unixtimems`, `guid`, `entry`, `text`, `chat_type`, `target_id`, `target_type` FROM `%s`.`creature_text` WHERE %s ORDER BY `unixtimems`", SniffDatabase::m_databaseName.c_str(), whereClause))
     {
         do
         {
@@ -250,12 +227,17 @@ void SniffDatabase::LoadCreatureText(char const* whereClause)
             uint64 unixtimems = pFields[0].getUInt64();
             uint32 creatureGuid = pFields[1].getUInt32();
             uint32 creatureId = pFields[2].getUInt32();
-            uint32 groupId = pFields[3].getUInt32();
 
-            CreatureText const* textEntry = SniffDatabase::GetCreatureTextTemplate(creatureId, groupId);
-            std::string text = textEntry ? textEntry->text : "<error>";
-            uint32 chatType = textEntry ? textEntry->chatType : 0;
-            std::string comment = textEntry ? textEntry->comment : "<error>";
+            std::string text = pFields[3].getCppString();
+            uint32 chatType = pFields[4].getUInt32();
+
+            uint32 targetId = pFields[5].getUInt32();
+            std::string targetType = pFields[6].getCppString();
+            std::string comment;
+            if (!targetType.empty())
+                comment = targetType;
+            if (targetId)
+                comment += " " + std::to_string(targetId);
 
             std::shared_ptr<SniffedEvent_CreatureText> newEvent = std::make_shared<SniffedEvent_CreatureText>(creatureGuid, creatureId, text, chatType, comment);
             TimelineMaker::m_eventsMap.insert(std::make_pair(unixtimems, newEvent));
