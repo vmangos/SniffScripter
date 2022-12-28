@@ -57,15 +57,16 @@ std::string MakeConnectionString()
 
 enum
 {
-    OPTION_TIMELINE_SPECIFIC_GUIDS  = 1,
-    OPTION_TIMELINE_ALL_EVENTS      = 2,
-    OPTION_TIMELINE_WAYPOINTS       = 3,
-    OPTION_GENERATE_SCRIPT          = 4,
-    OPTION_QUESTS_WITH_RP_EVENTS    = 5,
-    OPTION_CALCULATE_ARMOR          = 6,
-    OPTION_SPELL_TIMERS             = 7,
-    OPTION_BREAKDOWN_NPC_FLAGS      = 8,
-    OPTION_BREAKDOWN_UNIT_FLAGS     = 9,
+    OPTION_TIMELINE_SPECIFIC_GUIDS          = 1,
+    OPTION_TIMELINE_ALL_EVENTS              = 2,
+    OPTION_TIMELINE_WAYPOINTS               = 3,
+    OPTION_GENERATE_SCRIPT                  = 4,
+    OPTION_QUESTS_WITH_RP_EVENTS            = 5,
+    OPTION_CALCULATE_ARMOR                  = 6,
+    OPTION_SPELL_TIMERS                     = 7,
+    OPTION_BREAKDOWN_NPC_FLAGS              = 8,
+    OPTION_BREAKDOWN_UNIT_FLAGS             = 9,
+    OPTION_BREAKDOWN_MECHANIC_IMMUNE_MASK   = 10,
 };
 
 void AskAboutClientEvents(bool& showReclaimCorpse, bool& showReleaseSpirit, bool& showQuests, bool& showCreatureInteract, bool& showGameObjectUse, bool& showUseItem)
@@ -136,8 +137,9 @@ int main()
     printf("6. Calculate creature armor\n");
     printf("7. Calculate spell timers\n");
     printf("8. Breakdown NPC Flags\n");
-    printf("9. Breakdown Unit Flags\n");
-    printf("> ");
+	printf("9. Breakdown Unit Flags\n");
+	printf("10. Breakdown Mechanic Immune Mask\n");
+	printf("> ");
 
     uint32 option = GetUInt32();
 
@@ -428,6 +430,19 @@ int main()
             printf("Unit Flags: ");
             uint32 flags = GetUInt32();
             std::string flagNames = GetUnitFlagNames(flags);
+            printf(flagNames.c_str());
+            printf("\nAgain? (y/n)\n>");
+            repeat = GetChar() == 'y';
+        }
+    }
+    else if (option == OPTION_BREAKDOWN_MECHANIC_IMMUNE_MASK)
+    {
+        bool repeat = true;
+        while (repeat)
+        {
+            printf("Mechanic Immune Mask: ");
+            uint32 mask = GetUInt32();
+            std::string flagNames = GetMechanicImmuneMaskNames(mask);
             printf(flagNames.c_str());
             printf("\nAgain? (y/n)\n>");
             repeat = GetChar() == 'y';
