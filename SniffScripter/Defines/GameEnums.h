@@ -636,38 +636,38 @@ enum UnitFlags : uint32
 
 enum MechanicsImmuneMask : uint32
 {
-    MECHANIC_CHARM				= 0x00000001,
-	MECHANIC_DISORIENTED		= 0x00000002,
-	MECHANIC_DISARM				= 0x00000004,
-	MECHANIC_DISTRACT			= 0x00000008,
-	MECHANIC_FEAR				= 0x00000010,
-	MECHANIC_FUMBLE				= 0x00000020,
-	MECHANIC_ROOT				= 0x00000040,
-	MECHANIC_PACIFY				= 0x00000080,
-	MECHANIC_SILENCE			= 0x00000100,
-	MECHANIC_SLEEP				= 0x00000200,
-	MECHANIC_SNARE				= 0x00000400,
-	MECHANIC_STUN				= 0x00000800,
-	MECHANIC_FREEZE				= 0x00001000,
-	MECHANIC_KNOCKOUT			= 0x00002000,
-	MECHANIC_BLEED				= 0x00004000,
-	MECHANIC_BANDAGE			= 0x00008000,
-	MECHANIC_POLYMORPH			= 0x00010000,
-	MECHANIC_BANISH				= 0x00020000,
-	MECHANIC_SHIELD				= 0x00040000,
-	MECHANIC_SHACKLE			= 0x00080000,
-	MECHANIC_MOUNT				= 0x00100000,
-	MECHANIC_PERSUADE			= 0x00200000,
-	MECHANIC_TURN				= 0x00400000,
-	MECHANIC_HORROR				= 0x00800000,
-	MECHANIC_INVULNERABILITY	= 0x01000000,
-	MECHANIC_INTERRUPT			= 0x02000000,
-	MECHANIC_DAZE				= 0x04000000,
-	MECHANIC_DISCOVERY			= 0x08000000,
-	MECHANIC_IMMUNE_SHIELD		= 0x10000000,
-	MECHANIC_SAPPED				= 0x20000000,
-	MECHANIC_SLOW_CAST_SPEED	= 0x40000000,
-	MAX_MECHANIC = 31
+    MECHANIC_CHARM              = 0x00000001,
+    MECHANIC_DISORIENTED        = 0x00000002,
+    MECHANIC_DISARM             = 0x00000004,
+    MECHANIC_DISTRACT           = 0x00000008,
+    MECHANIC_FEAR               = 0x00000010,
+    MECHANIC_FUMBLE             = 0x00000020,
+    MECHANIC_ROOT               = 0x00000040,
+    MECHANIC_PACIFY             = 0x00000080,
+    MECHANIC_SILENCE            = 0x00000100,
+    MECHANIC_SLEEP              = 0x00000200,
+    MECHANIC_SNARE              = 0x00000400,
+    MECHANIC_STUN               = 0x00000800,
+    MECHANIC_FREEZE             = 0x00001000,
+    MECHANIC_KNOCKOUT           = 0x00002000,
+    MECHANIC_BLEED              = 0x00004000,
+    MECHANIC_BANDAGE            = 0x00008000,
+    MECHANIC_POLYMORPH          = 0x00010000,
+    MECHANIC_BANISH             = 0x00020000,
+    MECHANIC_SHIELD             = 0x00040000,
+    MECHANIC_SHACKLE            = 0x00080000,
+    MECHANIC_MOUNT              = 0x00100000,
+    MECHANIC_PERSUADE           = 0x00200000,
+    MECHANIC_TURN               = 0x00400000,
+    MECHANIC_HORROR             = 0x00800000,
+    MECHANIC_INVULNERABILITY    = 0x01000000,
+    MECHANIC_INTERRUPT          = 0x02000000,
+    MECHANIC_DAZE               = 0x04000000,
+    MECHANIC_DISCOVERY          = 0x08000000,
+    MECHANIC_IMMUNE_SHIELD      = 0x10000000,
+    MECHANIC_SAPPED             = 0x20000000,
+    MECHANIC_SLOW_CAST_SPEED    = 0x40000000,
+    MAX_MECHANIC = 31
 };
 
 // If the flag should be changed in script commands.
@@ -778,66 +778,66 @@ inline std::string GetMechanicImmuneMaskName(uint32 mask)
 {
     switch (mask)
     {
-		case MECHANIC_CHARM:
-		    return "MECHANIC_CHARM";
-		case MECHANIC_DISORIENTED:
-		    return "MECHANIC_DISORIENTED";
-		case MECHANIC_DISARM:
-		    return "MECHANIC_DISARM";
-		case MECHANIC_DISTRACT:
-		    return "MECHANIC_DISTRACT";
-		case MECHANIC_FEAR:
-		    return "MECHANIC_FEAR";
-		case MECHANIC_FUMBLE:
-		    return "MECHANIC_FUMBLE";
-		case MECHANIC_ROOT:
-		    return "MECHANIC_ROOT";
-		case MECHANIC_PACIFY:
-		    return "MECHANIC_PACIFY";
-		case MECHANIC_SILENCE:
-		    return "MECHANIC_SILENCE";
-		case MECHANIC_SLEEP:
-		    return "MECHANIC_SLEEP";
-		case MECHANIC_SNARE:
-		    return "MECHANIC_SNARE";
-		case MECHANIC_STUN:
-		    return "MECHANIC_STUN";
-		case MECHANIC_FREEZE:
-		    return "MECHANIC_FREEZE";
-		case MECHANIC_KNOCKOUT:
-		    return "MECHANIC_KNOCKOUT";
-		case MECHANIC_BLEED:
-		    return "MECHANIC_BLEED";
-		case MECHANIC_BANDAGE:
-		    return "MECHANIC_BANDAGE";
-		case MECHANIC_POLYMORPH:
-		    return "MECHANIC_POLYMORPH";
-		case MECHANIC_BANISH:
-		    return "MECHANIC_BANISH";
-		case MECHANIC_SHIELD:
-		    return "MECHANIC_SHIELD";
-		case MECHANIC_SHACKLE:
-		    return "MECHANIC_SHACKLE";
-		case MECHANIC_MOUNT:
-		    return "MECHANIC_MOUNT";
-		case MECHANIC_PERSUADE:
-		    return "MECHANIC_PERSUADE";
-		case MECHANIC_TURN:
-		    return "MECHANIC_TURN";
-		case MECHANIC_HORROR:
-		    return "MECHANIC_HORROR";
-		case MECHANIC_INVULNERABILITY:
-		    return "MECHANIC_INVULNERABILITY";
-		case MECHANIC_INTERRUPT:
-		    return "MECHANIC_INTERRUPT";
-		case MECHANIC_DAZE:
-		    return "MECHANIC_DAZE";
-		case MECHANIC_DISCOVERY:
-		    return "MECHANIC_DISCOVERY";
-		case MECHANIC_IMMUNE_SHIELD:
-		    return "MECHANIC_IMMUNE_SHIELD";
-		case MECHANIC_SAPPED:
-		    return "MECHANIC_SAPPED";
+        case MECHANIC_CHARM:
+            return "MECHANIC_CHARM";
+        case MECHANIC_DISORIENTED:
+            return "MECHANIC_DISORIENTED";
+        case MECHANIC_DISARM:
+            return "MECHANIC_DISARM";
+        case MECHANIC_DISTRACT:
+            return "MECHANIC_DISTRACT";
+        case MECHANIC_FEAR:
+            return "MECHANIC_FEAR";
+        case MECHANIC_FUMBLE:
+            return "MECHANIC_FUMBLE";
+        case MECHANIC_ROOT:
+            return "MECHANIC_ROOT";
+        case MECHANIC_PACIFY:
+            return "MECHANIC_PACIFY";
+        case MECHANIC_SILENCE:
+            return "MECHANIC_SILENCE";
+        case MECHANIC_SLEEP:
+            return "MECHANIC_SLEEP";
+        case MECHANIC_SNARE:
+            return "MECHANIC_SNARE";
+        case MECHANIC_STUN:
+            return "MECHANIC_STUN";
+        case MECHANIC_FREEZE:
+            return "MECHANIC_FREEZE";
+        case MECHANIC_KNOCKOUT:
+            return "MECHANIC_KNOCKOUT";
+        case MECHANIC_BLEED:
+            return "MECHANIC_BLEED";
+        case MECHANIC_BANDAGE:
+            return "MECHANIC_BANDAGE";
+        case MECHANIC_POLYMORPH:
+            return "MECHANIC_POLYMORPH";
+        case MECHANIC_BANISH:
+            return "MECHANIC_BANISH";
+        case MECHANIC_SHIELD:
+            return "MECHANIC_SHIELD";
+        case MECHANIC_SHACKLE:
+            return "MECHANIC_SHACKLE";
+        case MECHANIC_MOUNT:
+            return "MECHANIC_MOUNT";
+        case MECHANIC_PERSUADE:
+            return "MECHANIC_PERSUADE";
+        case MECHANIC_TURN:
+            return "MECHANIC_TURN";
+        case MECHANIC_HORROR:
+            return "MECHANIC_HORROR";
+        case MECHANIC_INVULNERABILITY:
+            return "MECHANIC_INVULNERABILITY";
+        case MECHANIC_INTERRUPT:
+            return "MECHANIC_INTERRUPT";
+        case MECHANIC_DAZE:
+            return "MECHANIC_DAZE";
+        case MECHANIC_DISCOVERY:
+            return "MECHANIC_DISCOVERY";
+        case MECHANIC_IMMUNE_SHIELD:
+            return "MECHANIC_IMMUNE_SHIELD";
+        case MECHANIC_SAPPED:
+            return "MECHANIC_SAPPED";
     }
     return "UNKNOWN";
 }
@@ -851,8 +851,8 @@ inline std::string GetMechanicImmuneMaskNames(uint32 masks)
         if (masks & mask)
         {
             if (!maskNames.empty())
-				maskNames += " | ";
-			maskNames += GetMechanicImmuneMaskName(mask);
+                maskNames += " | ";
+            maskNames += GetMechanicImmuneMaskName(mask);
         }
     }
     return maskNames;

@@ -137,9 +137,9 @@ int main()
     printf("6. Calculate creature armor\n");
     printf("7. Calculate spell timers\n");
     printf("8. Breakdown NPC Flags\n");
-	printf("9. Breakdown Unit Flags\n");
-	printf("10. Breakdown Mechanic Immune Mask\n");
-	printf("> ");
+    printf("9. Breakdown Unit Flags\n");
+    printf("10. Breakdown Mechanic Immune Mask\n");
+    printf("> ");
 
     uint32 option = GetUInt32();
 
@@ -147,7 +147,7 @@ int main()
         option == OPTION_TIMELINE_ALL_EVENTS ||
         option == OPTION_TIMELINE_WAYPOINTS ||
         option == OPTION_QUESTS_WITH_RP_EVENTS ||
-        option == OPTION_GENERATE_SCRIPT || 
+        option == OPTION_GENERATE_SCRIPT ||
         option == OPTION_CALCULATE_ARMOR ||
         option == OPTION_SPELL_TIMERS)
     {
@@ -230,7 +230,7 @@ int main()
 
             printf("Show when sounds or music played? (y/n)\n> ");
             bool showSounds = GetChar() == 'y';
-            
+
             printf("Start time: ");
             uint32 uiStartTime = GetUInt32();
 
@@ -261,7 +261,7 @@ int main()
             bool showCreatureUpdates = false;
             if (showCreatures)
                 AskAboutCreatureEvents(showCreatureDeaths, showCreatureAttacks, showCreatureTexts, showCreatureEmotes, showCreatureMoves, showCreatureCasts, showCreatureUpdates);
-            
+
             printf("Show gameobject related events? (y/n)\n> ");
             bool showGameObjects = GetChar() == 'y';
             bool showGameObjectCustomAnims = false;
